@@ -1,0 +1,2058 @@
+@import 'tailwindcss';
+@variant dark (.dark &);
+/* 基础变量定义 - 采用 #252126 作为主色调 */
+:root {
+    /* 主题色 - 深紫灰 (#252126) */
+    --main-color: #6a4c93; /* 与 #252126 搭配的主紫 */
+    --main-bg-color: #252126; /* 深紫灰背景 */
+    /* 主内容区域扩宽 */
+    --vp-layout-max-width: 1536px;
+    /* 基础文字大小 */
+    --main-font-size: 14px;
+    /* VitePress 背景色覆盖 - 优化深浅层次差 */
+    --vp-c-bg: #f8f9fa; /* 浅色模式主背景（浅灰） */
+    --vp-c-bg-soft: #ffffff; /* 卡片/侧边栏背景（纯白），与主背景形成明确层次 */
+    /* 浅色模式文字色 - 提升整体可读性，取消默认半透明 */
+    --vp-c-text-1: #1f2937;
+    --vp-c-text-2: #475569;
+    --vp-c-text-3: #64748b;
+    /* 主题色变体 */
+    --main-color-dark: color-mix(in srgb, var(--main-color) 70%, black);
+    --main-color-light: color-mix(in srgb, var(--main-color) 85%, white);
+    /* VitePress 默认颜色覆盖 - 全部使用深紫灰调 */
+    --vp-c-indigo-1: var(--main-color);
+    --vp-c-indigo-2: var(--main-color-light);
+    --vp-c-indigo-3: color-mix(in srgb, var(--main-color) 50%, white);
+    --vp-c-indigo-soft: color-mix(in srgb, var(--main-color) 15%, transparent);
+    /* 二级强调色 */
+    --vp-c-purple-1: #8a65c4;
+    --vp-c-purple-2: color-mix(in srgb, var(--vp-c-purple-1) 80%, white);
+    --vp-c-purple-3: color-mix(in srgb, var(--vp-c-purple-1) 50%, white);
+    --vp-c-purple-soft: color-mix(in srgb, var(--vp-c-purple-1) 10%, transparent);
+    /* 辅助色调整为紫灰协调色 */
+    --vp-c-yellow-1: #c9a2c8;
+    --vp-c-red-1: #a764b0;
+    --vp-c-green-1: #8a9cc5;
+    /* VitePress 徽标颜色覆盖 */
+    --vp-badge-info-text: var(--main-color);
+    --vp-badge-info-bg: var(--vp-c-indigo-soft);
+    --vp-badge-info-border: var(--main-color);
+    --vp-badge-tip-border: var(--vp-c-purple-1);
+    --vp-badge-warning-border: var(--vp-c-yellow-1);
+    --vp-badge-danger-border: var(--vp-c-red-1);
+    /* VitePress 按钮 */
+    --vp-button-brand-bg: var(--main-color);
+    --vp-button-brand-active-bg: var(--main-color-dark);
+    --vp-button-brand-hover-bg: var(--main-color-light);
+    /* VitePress 侧边栏 */
+    --vp-sidebar-bg-color: var(--vp-c-bg-soft);
+    /* 主题切换按钮 */
+    --vp-input-switch-bg-color: var(--vp-c-bg-soft);
+    /* 搜索 */
+    --docsearch-primary-color: var(--main-color);
+    --docsearch-logo-color: var(--main-color);
+    /* Footer */
+    --vp-footer-height: 100px;
+    /* 全局边框与分割线 - 浅色模式统一规范 */
+    --vp-c-border: #e2e8f0;
+    --vp-c-divider: #e2e8f0;
+    /* Tailwind 变量 */
+    --border-color: theme('colors.slate.300');
+    --shadow-color: theme('colors.slate.200');
+    --icon-color: theme('colors.slate.900');
+}
+.dark {
+    /* 深色模式背景 - 使用 #252126 */
+    --vp-c-bg: var(--main-bg-color);
+    /* 核心修正：软背景改为比主背景更亮，而非更暗，形成浮层感 */
+    --vp-c-bg-soft: color-mix(in srgb, var(--main-bg-color) 92%, #ffffff);
+    /* 深色模式文字颜色 - 保持高对比度 */
+    --vp-c-text-1: #e8e8e8;
+    --vp-c-text-2: #c4c4c4;
+    --vp-c-text-3: #969696;
+    /* 深色模式主色提亮，解决超链接可读性差 */
+    --main-color: #9d7ed0;
+    --main-color-dark: color-mix(in srgb, var(--main-color) 60%, black);
+    --main-color-light: color-mix(in srgb, var(--main-color) 85%, #333);
+    /* VitePress 主题色同步提亮 */
+    --vp-c-indigo-1: var(--main-color);
+    --vp-c-indigo-2: color-mix(in srgb, var(--main-color) 70%, #333);
+    --vp-c-indigo-3: color-mix(in srgb, var(--main-color) 50%, #333);
+    --vp-c-indigo-soft: color-mix(in srgb, var(--main-color) 12%, transparent);
+    /* 深色模式辅助色同步提亮 */
+    --vp-c-purple-1: #a78bfa;
+    --vp-c-purple-2: color-mix(in srgb, var(--vp-c-purple-1) 70%, #333);
+    --vp-c-purple-3: color-mix(in srgb, var(--vp-c-purple-1) 40%, #333);
+    --vp-c-purple-soft: color-mix(in srgb, var(--vp-c-purple-1) 10%, transparent);
+    /* 全局边框与分割线 - 深色模式提亮 */
+    --vp-c-border: theme('colors.slate.500');
+    --vp-c-divider: theme('colors.slate.500');
+    /* Tailwind 变量同步 */
+    --border-color: theme('colors.slate.500');
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --icon-color: theme('colors.slate.200');
+}
+/* Tailwind 主题配置 */
+@theme {
+    /* 颜色系统 */
+    --color-main: var(--main-color);
+    --color-main-dark: var(--main-color-dark);
+    --color-main-light: var(--main-color-light);
+    --color-bg: var(--vp-c-bg);
+    --color-bg-soft: var(--vp-c-bg-soft);
+    --color-text1: var(--vp-c-text-1);
+    --color-text2: var(--vp-c-text-2);
+    --color-text3: var(--vp-c-text-3);
+    --color-border: var(--border-color);
+    --color-shadow: var(--shadow-color);
+}
+/* ========== 首页专属视觉强化 ========== */
+/* 首页副标题文字取消半透明，提升可读性 */
+.VPHome .VPHero .text {
+    color: var(--vp-c-text-2);
+    opacity: 1;
+}
+
+/* 桌面端：特性卡片强制一行等宽排列 */
+.VPFeatures .items {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    gap: 1rem;
+    width: 100%;
+    justify-content: center;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.VPFeatures .item {
+    flex: 1;
+    min-width: 0;
+    margin: 0 !important;
+}
+
+.VPFeatures .item .VPFeature {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 45%, transparent) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+    backdrop-filter: blur(40px) saturate(200%) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+    border-radius: 16px !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, var(--main-color) 12%, transparent),
+    0 4px 16px color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+    transition: all 0.3s ease !important;
+    height: 100% !important;
+}
+
+.VPFeatures .item .VPFeature:hover {
+    border-color: var(--main-color) !important;
+    box-shadow:
+    0 4px 16px color-mix(in srgb, var(--main-color) 20%, transparent),
+    0 8px 32px color-mix(in srgb, var(--main-color) 12%, transparent) !important;
+    transform: translateY(-4px) !important;
+}
+
+/* 特性卡片文字强化 */
+.VPFeatures .item .VPFeature .title {
+    color: var(--vp-c-text-1) !important;
+    font-weight: 600 !important;
+}
+.VPFeatures .item .VPFeature .details {
+    color: var(--vp-c-text-2) !important;
+    opacity: 1 !important;
+}
+
+/* 移动端（768px 以下）：特性卡片自动换行堆叠 + 居中修正 */
+@media (max-width: 768px) {
+    .VPFeatures .items {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
+    .VPFeatures .item {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+}
+
+
+/* ========== 隐藏默认深浅色切换（保留 Extra 菜单里的） ========== */
+.VPNavBarAppearance,
+.VPNavBar > .wrapper > .content > .content-body > .appearance,
+.VPNavScreen .appearance {
+    display: none !important;
+}
+
+/* ========== 移动端：隐藏 PC 端深浅色切换，显示移动端版本 ========== */
+.desktop-theme-switch {
+    display: none !important;
+}
+
+.mobile-theme-switch {
+    display: flex !important;
+    justify-content: center;
+    padding: 12px 0;
+    border-top: 1px solid color-mix(in srgb, var(--vp-c-border) 30%, transparent);
+    margin-top: 12px;
+}
+
+/* ========== PC 端：隐藏移动端版本 ========== */
+@media (min-width: 960px) {
+    .mobile-theme-switch {
+        display: none !important;
+    }
+
+    .VPNavBar .content-body {
+        justify-content: flex-end !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    /* 菜单靠左，其余靠右 */
+    .VPNavBar .menu {
+        order: 1 !important;
+        margin-right: auto !important;
+    }
+    .VPNavBar .translations { order: 2 !important; }
+    .VPNavBar .search {
+        order: 3 !important;
+        width: auto !important;
+        max-width: 160px !important;
+        margin-left: 8px !important;
+        margin-right: 8px !important;
+    }
+    .VPNavBar .desktop-theme-switch {
+        order: 4 !important;
+        margin-left: 24px !important;
+        margin-right: -10px !important;
+        position: relative !important;
+    }
+    .VPNavBar .desktop-theme-switch::before {
+        content: '' !important;
+        position: absolute !important;
+        left: -6px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 1px !important;
+        height: 24px !important;
+        background-color: color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+    }
+    .VPNavBar .social-links { order: 5 !important; }
+    .VPNavBar .extra { order: 6 !important; }
+    .VPNavBar .content-body > *:nth-child(4) {
+        order: 3.5 !important;
+    }
+
+    /* 隐藏默认的深浅色切换 */
+    .VPNavBar .appearance,
+    .VPNavBarAppearance {
+        display: none !important;
+    }
+
+    /* 确保自定义深浅色切换显示 */
+    .VPNavBar .content-body > .VPSwitchAppearance {
+        display: flex !important;
+    }
+}
+
+/* ========== 移动端 Home 布局适配 ========== */
+.VPHome {
+    padding-top: calc(var(--vp-nav-height) + 24px) !important;
+}
+
+/* ========== 移动端液态玻璃菜单栏 ========== */
+.VPNav {
+    position: fixed !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    top: 8px !important;
+}
+
+.VPNavBar {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+    -webkit-backdrop-filter: blur(60px) saturate(200%) !important;
+    backdrop-filter: blur(60px) saturate(200%) !important;
+    border-radius: 16px !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, var(--main-color) 15%, transparent),
+    0 4px 16px color-mix(in srgb, var(--main-color) 10%, transparent) !important;
+    outline: none !important;
+    overflow: visible !important;
+}
+
+.VPNavBar .wrapper {
+    padding: 0 8px !important;
+}
+
+.VPNavBar .hamburger {
+    z-index: 10 !important;
+}
+
+/* 移动端本地导航（侧边栏按钮）推到悬浮菜单栏下方 */
+.VPLocalNav {
+    margin-top: calc(var(--vp-nav-height) + 16px) !important;
+    border-bottom: none !important;
+    background-color: transparent !important;
+}
+
+/* 移动端下拉菜单液态玻璃 */
+.VPNavScreen {
+    position: fixed !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    top: calc(var(--vp-nav-height) + 20px) !important;
+    bottom: 8px !important;
+    background-color: color-mix(in srgb, var(--vp-c-bg) 45%, transparent) !important;
+    -webkit-backdrop-filter: blur(80px) saturate(200%) !important;
+    backdrop-filter: blur(80px) saturate(200%) !important;
+    border-radius: 16px !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+    box-shadow:
+    0 4px 16px color-mix(in srgb, var(--main-color) 15%, transparent),
+    0 8px 32px color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+}
+
+/* 移动端侧边栏悬浮 */
+.VPSidebar {
+    top: 80px !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: 30% !important;
+    width: auto !important;
+    max-width: 280px !important;
+    padding: 12px !important;
+    overflow-x: auto !important;
+    background-color: color-mix(in srgb, var(--vp-c-bg) 45%, transparent) !important;
+    -webkit-backdrop-filter: blur(60px) saturate(200%) !important;
+    backdrop-filter: blur(60px) saturate(200%) !important;
+    border-radius: 16px !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+    box-shadow:
+    0 4px 16px color-mix(in srgb, var(--main-color) 15%, transparent),
+    0 8px 32px color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+}
+
+/* 移动端下拉菜单容器 */
+.VPNavScreen .container {
+    max-width: 288px !important;
+    margin: 0 auto !important;
+    padding: 24px 0 96px !important;
+}
+
+/* 侧边栏打开时背景压暗 */
+.VPBackdrop {
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 移动端侧边栏弹出动画 */
+@media (max-width: 959px) {
+    .VPSidebar {
+        transform: scale(0.92) translateY(16px) !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+
+    .VPSidebar.open {
+        transform: scale(1) translateY(0) !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+}
+
+.VPSidebar .curtain {
+    background-color: transparent !important;
+    display: none !important;
+}
+
+/* 标题区域完全透明无边框 */
+.VPNavBar .title {
+    border: none !important;
+    outline: none !important;
+    background-color: transparent !important;
+}
+
+/* 固定标题容器宽度 */
+.VPNavBar .title {
+    width: 208.64px !important;
+    min-width: 208.64px !important;
+    flex-shrink: 0 !important;
+}
+
+/* 无论是否有 Sidebar，菜单栏统一按带 Sidebar 的位置渲染 */
+@media (min-width: 960px) {
+    .VPNavBar .wrapper {
+        padding: 0 !important;
+    }
+    .VPNavBar .container {
+        max-width: 100% !important;
+    }
+    .VPNavBar .content {
+        padding-left: var(--vp-sidebar-width) !important;
+        padding-right: 32px !important;
+    }
+    .VPNavBar .title {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: 2 !important;
+        padding: 0 32px !important;
+        width: var(--vp-sidebar-width) !important;
+        height: var(--vp-nav-height) !important;
+        background-color: transparent !important;
+        border-bottom: none !important;
+    }
+}
+
+.VPNavBar .content-body {
+    background-color: transparent !important;
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* 彻底隐藏菜单栏底部分割线（覆盖所有状态） */
+.VPNavBar .divider,
+.VPNavBar .divider-line,
+.VPNavBar:not(.home) .divider-line,
+.VPNavBar:not(.home.top) .divider-line,
+.VPNavBar:not(.has-sidebar):not(.home.top) .divider {
+    background-color: transparent !important;
+    height: 0 !important;
+    display: none !important;
+    border: none !important;
+}
+
+/* 隐藏标题区域的所有边框 */
+.VPNavBar .title,
+.VPNavBar .wrapper,
+.VPNavBar .container {
+    border: none !important;
+    outline: none !important;
+}
+
+/* ========== 深浅色切换液态玻璃 ========== */
+.VPSwitch,
+.VPSwitchAppearance {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(200%) !important;
+    backdrop-filter: blur(20px) saturate(200%) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+    border-radius: 12px !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, var(--main-color) 15%, transparent) !important;
+    transition: all 0.25s ease !important;
+}
+
+.VPSwitch:hover,
+.VPSwitchAppearance:hover {
+    border-color: var(--main-color) !important;
+    box-shadow:
+    0 4px 12px color-mix(in srgb, var(--main-color) 25%, transparent) !important;
+}
+
+.VPSwitch .check,
+.VPSwitchAppearance .check {
+    background-color: var(--main-color) !important;
+    box-shadow:
+    0 2px 4px color-mix(in srgb, var(--main-color) 30%, transparent) !important;
+    border-radius: 10px !important;
+}
+
+.VPSwitch .icon :deep([class^='vpi-']),
+.VPSwitchAppearance .icon :deep([class^='vpi-']) {
+    color: #fff !important;
+}
+
+.dark .VPSwitch .icon :deep([class^='vpi-']),
+.dark .VPSwitchAppearance .icon :deep([class^='vpi-']) {
+    color: #fff !important;
+}
+
+/* 移动端深浅色容器 */
+.VPNavScreenAppearance {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 45%, transparent) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+    backdrop-filter: blur(40px) saturate(200%) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+    border-radius: 12px !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, var(--main-color) 12%, transparent) !important;
+}
+
+/* ========== 友链页面容器液态玻璃 ========== */
+.link-comment-container {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+    backdrop-filter: blur(40px) saturate(200%) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+    box-shadow:
+    0 4px 16px color-mix(in srgb, var(--main-color) 12%, transparent),
+    0 8px 32px color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+}
+
+.link-details-container {
+    background-color: color-mix(in srgb, var(--vp-c-tip-soft) 70%, transparent) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-tip-1) 40%, transparent) !important;
+    border-left: 4px solid var(--vp-c-tip-1) !important;
+}
+
+/* 深色模式 */
+.dark .link-comment-container {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 55%, transparent) !important;
+}
+
+.dark .link-details-container {
+    background-color: color-mix(in srgb, var(--vp-c-tip-soft) 50%, transparent) !important;
+}
+
+/* ========== 移动端搜索按钮液态玻璃 ========== */
+/* 移动端搜索按钮 */
+.VPNavBarSearchButton {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(200%) !important;
+    backdrop-filter: blur(20px) saturate(200%) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, var(--main-color) 12%, transparent) !important;
+    transition: all 0.25s ease !important;
+    color: var(--vp-c-text-2) !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    height: auto !important;
+    min-height: unset !important;
+}
+
+.VPNavBarSearchButton:hover {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 60%, transparent) !important;
+    box-shadow:
+    0 4px 12px color-mix(in srgb, var(--main-color) 20%, transparent) !important;
+    color: var(--vp-c-text-1) !important;
+}
+
+/* PC 端搜索按钮恢复 */
+@media (min-width: 768px) {
+    .VPNavBarSearchButton {
+        padding: 8px 16px !important;
+        font-size: 14px !important;
+    }
+}
+
+/* ========== PC 搜索框液态玻璃 ========== */
+@media (min-width: 768px) {
+    .VPNavBarSearchButton {
+        padding: 8px 16px !important;
+    }
+
+    .VPNavBarSearchButton .keys {
+        background-color: color-mix(in srgb, var(--vp-c-bg) 60%, transparent) !important;
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+        border-radius: 6px !important;
+        padding: 2px 6px !important;
+        box-shadow:
+        0 2px 6px color-mix(in srgb, var(--main-color) 15%, transparent) !important;
+    }
+
+    .VPNavBarSearchButton .keys kbd {
+        color: var(--main-color) !important;
+        font-weight: 600 !important;
+        text-shadow: 0 0 8px color-mix(in srgb, var(--main-color) 30%, transparent) !important;
+    }
+}
+
+/* ========== 搜索弹窗液态玻璃 + 动画 ========== */
+.VPLocalSearchBox .backdrop {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    backdrop-filter: blur(8px) !important;
+    animation: searchBackdropIn 0.25s ease-out;
+}
+
+.VPLocalSearchBox .shell {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 75%, transparent) !important;
+    -webkit-backdrop-filter: blur(60px) saturate(200%) !important;
+    backdrop-filter: blur(60px) saturate(200%) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+    box-shadow:
+    0 8px 32px color-mix(in srgb, var(--main-color) 15%, transparent),
+    0 16px 64px color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+    animation: searchShellIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top center;
+}
+
+@keyframes searchBackdropIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes searchShellIn {
+    from {
+        opacity: 0;
+        transform: translateY(-24px) scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 移动端搜索弹窗 */
+@media (max-width: 767px) {
+    .VPLocalSearchBox .shell {
+        border-radius: 12px !important;
+        margin: 8px !important;
+        max-height: calc(100vh - 16px) !important;
+        transform-origin: bottom center;
+        animation: searchShellInMobile 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes searchShellInMobile {
+        from {
+            opacity: 0;
+            transform: translateY(32px) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+}
+
+/* PC 端搜索弹窗 */
+@media (min-width: 768px) {
+    .VPLocalSearchBox .shell {
+        border-radius: 16px !important;
+    }
+}
+
+/* ========== 搜索弹窗关闭动画 ========== */
+/* .closing 由 config.mts 中的 patchSearchExitAnimation 插件注入的
+   requestClose() 添加，动画播完（250ms）后组件才真正卸载 */
+.VPLocalSearchBox.closing .backdrop {
+    animation: searchBackdropOut 0.25s ease-in forwards;
+}
+
+.VPLocalSearchBox.closing .shell {
+    animation: searchShellOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+    transform-origin: top center;
+}
+
+@keyframes searchBackdropOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes searchShellOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-16px) scale(0.94);
+    }
+}
+
+/* 移动端：向下滑出（与进入方向相反） */
+@media (max-width: 767px) {
+    .VPLocalSearchBox.closing .shell {
+        animation: searchShellOutMobile 0.25s cubic-bezier(0.4, 0, 1, 1) forwards;
+        transform-origin: bottom center;
+    }
+
+    @keyframes searchShellOutMobile {
+        from {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(24px) scale(0.92);
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .VPLocalSearchBox.closing .backdrop,
+    .VPLocalSearchBox.closing .shell {
+        animation-duration: 0.01s !important;
+    }
+}
+
+
+.VPLocalSearchBox .search-bar {
+    background-color: transparent !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+    border-radius: 10px !important;
+    margin: 12px 16px !important;
+    gap: 4px !important;
+    align-items: center !important;
+}
+
+.VPLocalSearchBox .search-bar:focus-within {
+    border-color: var(--main-color) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--main-color) 15%, transparent) !important;
+}
+
+.VPLocalSearchBox .search-input {
+    background-color: transparent !important;
+    color: var(--vp-c-text-1) !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+.VPLocalSearchBox .search-input::placeholder {
+    color: var(--vp-c-text-3) !important;
+}
+
+.VPLocalSearchBox .search-actions button {
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.VPLocalSearchBox .search-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.VPLocalSearchBox .search-icon {
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.VPLocalSearchBox .search-actions button {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 55%, transparent) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(200%) !important;
+    backdrop-filter: blur(20px) saturate(200%) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+    border-radius: 8px !important;
+    color: var(--vp-c-text-2) !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--main-color) 10%, transparent) !important;
+}
+
+.VPLocalSearchBox .search-actions button:hover {
+    border-color: var(--main-color) !important;
+    color: var(--main-color) !important;
+    box-shadow: 0 4px 10px color-mix(in srgb, var(--main-color) 18%, transparent) !important;
+}
+
+.VPLocalSearchBox .results {
+    background-color: transparent !important;
+}
+
+.VPLocalSearchBox .result {
+    border-radius: 10px !important;
+    transition: all 0.2s ease !important;
+}
+
+.VPLocalSearchBox .result:hover,
+.VPLocalSearchBox .result.selected {
+    background-color: color-mix(in srgb, var(--main-color) 10%, transparent) !important;
+}
+
+.VPLocalSearchBox .titles .title {
+    color: var(--vp-c-text-2) !important;
+}
+
+.VPLocalSearchBox .titles .title.main {
+    color: var(--vp-c-text-1) !important;
+}
+
+.VPLocalSearchBox .titles .title-icon {
+    color: var(--main-color) !important;
+}
+
+.VPLocalSearchBox mark {
+    background-color: color-mix(in srgb, var(--main-color) 20%, transparent) !important;
+    color: var(--main-color) !important;
+    border-radius: 2px !important;
+    padding: 0 2px !important;
+}
+
+/* 深色模式 */
+.dark .VPNavBarSearchButton {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 55%, transparent) !important;
+}
+
+.dark .VPLocalSearchBox .shell {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 80%, transparent) !important;
+}
+
+.dark .VPLocalSearchBox .search-bar {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 65%, transparent) !important;
+}
+
+/* ========== 自定义块液态玻璃 ========== */
+.vp-doc .custom-block {
+    -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    border-radius: 12px !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, var(--main-color) 10%, transparent),
+    0 4px 16px color-mix(in srgb, var(--main-color) 6%, transparent) !important;
+    transition: all 0.25s ease !important;
+    padding: 16px 20px !important;
+}
+
+/* Info / Note */
+.vp-doc .custom-block.info,
+.vp-doc .custom-block.note {
+    background-color: color-mix(in srgb, var(--vp-c-default-soft) 75%, transparent) !important;
+    border-left: 4px solid var(--vp-c-default-1) !important;
+}
+
+/* Tip */
+.vp-doc .custom-block.tip {
+    background-color: color-mix(in srgb, var(--vp-c-tip-soft) 75%, transparent) !important;
+    border-left: 4px solid var(--vp-c-tip-1) !important;
+}
+
+/* Important */
+.vp-doc .custom-block.important {
+    background-color: color-mix(in srgb, var(--vp-c-important-soft) 75%, transparent) !important;
+    border-left: 4px solid var(--vp-c-important-1) !important;
+}
+
+/* Warning */
+.vp-doc .custom-block.warning {
+    background-color: color-mix(in srgb, var(--vp-c-warning-soft) 75%, transparent) !important;
+    border-left: 4px solid var(--vp-c-warning-1) !important;
+}
+
+/* Danger / Caution */
+.vp-doc .custom-block.danger,
+.vp-doc .custom-block.caution {
+    background-color: color-mix(in srgb, var(--vp-c-danger-soft) 75%, transparent) !important;
+    border-left: 4px solid var(--vp-c-danger-1) !important;
+}
+
+/* Details */
+.vp-doc .custom-block.details {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 65%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+    border-left: 4px solid var(--main-color) !important;
+}
+
+.vp-doc .custom-block summary {
+    color: var(--vp-c-text-1) !important;
+    font-weight: 600 !important;
+}
+
+/* 标题颜色保留 */
+.vp-doc .custom-block .custom-block-title {
+    color: inherit !important;
+    font-weight: 700 !important;
+    font-size: 15px !important;
+    margin-bottom: 8px !important;
+}
+
+/* 内容文字 */
+.vp-doc .custom-block p {
+    color: var(--vp-c-text-1) !important;
+    line-height: 1.7 !important;
+}
+
+/* 深色模式 */
+.dark .vp-doc .custom-block.info,
+.dark .vp-doc .custom-block.note {
+    background-color: color-mix(in srgb, var(--vp-c-default-soft) 50%, transparent) !important;
+}
+
+.dark .vp-doc .custom-block.tip {
+    background-color: color-mix(in srgb, var(--vp-c-tip-soft) 50%, transparent) !important;
+}
+
+.dark .vp-doc .custom-block.important {
+    background-color: color-mix(in srgb, var(--vp-c-important-soft) 50%, transparent) !important;
+}
+
+.dark .vp-doc .custom-block.warning {
+    background-color: color-mix(in srgb, var(--vp-c-warning-soft) 50%, transparent) !important;
+}
+
+.dark .vp-doc .custom-block.danger,
+.dark .vp-doc .custom-block.caution {
+    background-color: color-mix(in srgb, var(--vp-c-danger-soft) 50%, transparent) !important;
+}
+
+.dark .vp-doc .custom-block.details {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 55%, transparent) !important;
+}
+
+/* ========== 首页按钮液态玻璃 ========== */
+.VPButton {
+    -webkit-backdrop-filter: blur(20px) saturate(200%) !important;
+    backdrop-filter: blur(20px) saturate(200%) !important;
+    transition: all 0.25s ease !important;
+}
+
+.VPButton.brand {
+    background-color: color-mix(in srgb, var(--main-color) 85%, transparent) !important;
+    border-color: color-mix(in srgb, var(--main-color) 60%, transparent) !important;
+    box-shadow:
+    0 4px 12px color-mix(in srgb, var(--main-color) 30%, transparent) !important;
+    color: #fff !important;
+}
+
+.VPButton.brand:hover {
+    background-color: var(--main-color) !important;
+    border-color: var(--main-color) !important;
+    box-shadow:
+    0 8px 24px color-mix(in srgb, var(--main-color) 40%, transparent) !important;
+    transform: translateY(-2px);
+}
+
+.VPButton.alt {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+    border-color: color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, var(--main-color) 12%, transparent) !important;
+}
+
+.VPButton.alt:hover {
+    border-color: var(--main-color) !important;
+    box-shadow:
+    0 4px 16px color-mix(in srgb, var(--main-color) 20%, transparent) !important;
+    transform: translateY(-2px);
+}
+
+/* ========== 首页特性卡片液态玻璃 ========== */
+.VPFeature {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 45%, transparent) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+    backdrop-filter: blur(40px) saturate(200%) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+    border-radius: 16px !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, var(--main-color) 12%, transparent),
+    0 4px 16px color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+    transition: all 0.3s ease !important;
+}
+
+.VPFeature.link:hover {
+    border-color: var(--main-color) !important;
+    box-shadow:
+    0 4px 16px color-mix(in srgb, var(--main-color) 20%, transparent),
+    0 8px 32px color-mix(in srgb, var(--main-color) 12%, transparent) !important;
+    transform: translateY(-4px) !important;
+}
+
+.VPFeature .icon {
+    background-color: color-mix(in srgb, var(--main-color) 15%, transparent) !important;
+    border-radius: 12px !important;
+    color: var(--main-color) !important;
+}
+
+.VPFeature .title {
+    color: var(--vp-c-text-1) !important;
+}
+
+.VPFeature .details {
+    color: var(--vp-c-text-2) !important;
+    opacity: 1 !important;
+}
+
+/* 深色模式 */
+.dark .VPButton.brand {
+    background-color: color-mix(in srgb, var(--main-color) 80%, transparent) !important;
+}
+
+.dark .VPButton.alt {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 55%, transparent) !important;
+}
+
+.dark .VPFeature {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+}
+
+/* ========== 上一页下一页液态玻璃 ========== */
+.pager-link {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 40%, transparent) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+    backdrop-filter: blur(40px) saturate(200%) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+    border-radius: 12px !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, var(--main-color) 12%, transparent),
+    0 4px 16px color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+    transition: all 0.25s ease !important;
+}
+
+.pager-link:hover {
+    border-color: var(--main-color) !important;
+    box-shadow:
+    0 4px 12px color-mix(in srgb, var(--main-color) 20%, transparent),
+    0 8px 24px color-mix(in srgb, var(--main-color) 12%, transparent) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* 深色模式 */
+.dark .pager-link {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 45%, transparent) !important;
+}
+
+/* ========== 页面切换动画 ========== */
+.VPContent.fade-slide-enter {
+    animation: fadeSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== 文档导览液态玻璃 ========== */
+/* PC 端侧边导览 */
+.VPDocAsideOutline .content {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 35%, transparent) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+    backdrop-filter: blur(40px) saturate(200%) !important;
+    border-radius: 12px !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 80%, transparent) !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, var(--main-color) 15%, transparent),
+    0 4px 16px color-mix(in srgb, var(--main-color) 8%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--vp-c-border) 30%, transparent) !important;
+    padding: 16px !important;
+}
+
+/* 章节内容区域滚动 */
+.VPDocAsideOutline .content {
+    overflow-y: auto !important;
+    max-height: calc(100vh - var(--vp-nav-height) - var(--vp-footer-height) - 80px) !important;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--vp-c-border) 40%, transparent) transparent;
+}
+
+.VPDocAsideOutline .content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.VPDocAsideOutline .content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.VPDocAsideOutline .content::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--vp-c-border) 40%, transparent);
+    border-radius: 2px;
+}
+
+/* PC 端隐藏 outline-marker */
+.VPDocAsideOutline .outline-marker {
+    display: none !important;
+}
+
+/* 章节链接高亮（PC 侧边 + 手机下拉通用） */
+.VPDocAsideOutline .outline-link,
+.VPLocalNavOutlineDropdown .outline-link {
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    margin-left: -8px !important;
+    transition: all 0.2s ease !important;
+}
+
+.VPDocAsideOutline .outline-link:hover,
+.VPLocalNavOutlineDropdown .outline-link:hover {
+    color: var(--main-color) !important;
+    background-color: color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+}
+
+.VPDocAsideOutline .outline-link.active,
+.VPLocalNavOutlineDropdown .outline-link.active {
+    color: var(--main-color) !important;
+    font-weight: 600 !important;
+    background-color: color-mix(in srgb, var(--main-color) 12%, transparent) !important;
+    border-left: 2px solid var(--main-color) !important;
+    padding-left: 6px !important;
+}
+
+/* ========== 自定义滚动条 ========== */
+/* 整体网页滚动条 */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--vp-c-border) 60%, transparent);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in srgb, var(--vp-c-border) 80%, transparent);
+}
+
+/* 侧边栏滚动条 - 容器内 */
+.VPSidebar {
+    overflow-y: auto !important;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--vp-c-border) 50%, transparent) transparent;
+}
+
+.VPSidebar::-webkit-scrollbar {
+    width: 10px;
+}
+
+.VPSidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.VPSidebar::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--vp-c-border) 50%, transparent);
+    border-radius: 3px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+/* 手机端 Aside 支持水平滚动 */
+@media (max-width: 959px) {
+    .VPDoc .aside-container {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* PC 端滚动条加宽，更明显 */
+@media (min-width: 960px) {
+    .VPSidebar::-webkit-scrollbar {
+        width: 14px;
+    }
+    .VPSidebar::-webkit-scrollbar-thumb {
+        border: 3px solid transparent;
+        border-radius: 4px;
+    }
+
+    .VPDoc .aside-container::-webkit-scrollbar {
+        width: 14px;
+    }
+    .VPDoc .aside-container::-webkit-scrollbar-thumb {
+        border: 3px solid transparent;
+        border-radius: 3px;
+    }
+}
+
+.VPDoc .aside-curtain {
+    display: none !important;
+}
+
+/* 768px - 959px：搜索靠右，菜单靠左，Extra 保留 */
+@media (min-width: 768px) and (max-width: 959px) {
+    .VPNavBar .content-body {
+        display: flex !important;
+        justify-content: flex-end !important;
+    }
+    .VPNavBar .menu {
+        order: 1 !important;
+        margin-right: auto !important;
+    }
+    .VPNavBar .search {
+        order: 2 !important;
+    }
+    .VPNavBar .search .text {
+        display: none !important;
+    }
+    .VPNavBar .search .keys {
+        display: none !important;
+    }
+    /* 显示自己的 desktop-theme-switch，放在 Extra 按钮左边 */
+    .desktop-theme-switch {
+        display: flex !important;
+        order: 3 !important;
+        margin-right: 4px !important;
+    }
+    /* Extra 按钮放最右边 */
+    .VPNavBar .extra {
+        order: 4 !important;
+    }
+    /* 隐藏 Extra 菜单里的原生 Appearance */
+    .VPNavBarExtra .item.appearance {
+        display: none !important;
+    }
+    /* 只隐藏 navbar 主体里的，不隐藏 Extra 菜单里的 */
+    .VPNavBar > .wrapper > .content > .content-body > .translations,
+    .VPNavBar > .wrapper > .content > .content-body > .appearance,
+    .VPNavBar > .wrapper > .content > .content-body > .social-links {
+        display: none !important;
+    }
+}
+
+/* Extra 下拉菜单液态玻璃 */
+.VPNavBarExtra > .menu {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(200%) !important;
+    backdrop-filter: blur(20px) saturate(200%) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+    border-radius: 12px !important;
+    box-shadow:
+        0 4px 16px color-mix(in srgb, var(--main-color) 15%, transparent),
+        0 8px 32px color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+    transition: opacity 0.25s, visibility 0.25s !important;
+    transform: none !important;
+    will-change: auto !important;
+    isolation: isolate !important;
+}
+
+.VPNavBarExtra > .menu > .VPMenu {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.VPNavBarExtra > .menu > .VPMenu .item {
+    border-radius: 8px !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.VPNavBarExtra > .menu > .VPMenu .item:hover {
+    background-color: color-mix(in srgb, var(--main-color) 10%, transparent) !important;
+}
+
+/* 780-959px：搜索按钮放 NavBar 右边，Appearance 左边 */
+@media (min-width: 780px) and (max-width: 959px) {
+    .VPNavBar .search {
+        order: 2 !important;
+        margin-right: 4px !important;
+    }
+    .VPNavBar .search .text {
+        display: none !important;
+    }
+    .VPNavBar .search .keys {
+        display: none !important;
+    }
+}
+
+/* 766px 以下：汉堡和搜索都靠右 */
+@media (max-width: 766px) {
+    .VPNavBar .content-body {
+        display: flex !important;
+        justify-content: flex-end !important;
+    }
+    .VPNavBar .menu {
+        display: none !important;
+    }
+    .VPNavBar .search {
+        order: 1 !important;
+        margin-right: 8px !important;
+    }
+    .VPNavBar .search .text {
+        display: none !important;
+    }
+    .VPNavBar .search .keys {
+        display: none !important;
+    }
+    .VPNavBar .hamburger {
+        order: 2 !important;
+    }
+    .VPNavBar .translations,
+    .VPNavBar .appearance,
+    .VPNavBar .social-links,
+    .VPNavBar .extra {
+        display: none !important;
+    }
+}
+
+/* 导览下拉 - 移动端右下角小按钮 */
+@media (max-width: 1279px) {
+    .VPLocalNavOutlineDropdown {
+        position: fixed !important;
+        bottom: 16px !important;
+        right: 16px !important;
+        top: auto !important;
+        left: auto !important;
+        z-index: calc(var(--vp-z-index-sidebar) + 10) !important;
+    }
+
+    .VPLocalNavOutlineDropdown > button {
+        background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(200%) !important;
+        backdrop-filter: blur(20px) saturate(200%) !important;
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+        border-radius: 12px !important;
+        padding: 8px 16px !important;
+        font-size: 13px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        box-shadow:
+            0 2px 8px color-mix(in srgb, var(--main-color) 15%, transparent) !important;
+        color: var(--vp-c-text-2) !important;
+        cursor: pointer !important;
+        transition: all 0.25s ease !important;
+    }
+
+    .VPLocalNavOutlineDropdown > button:hover,
+    .VPLocalNavOutlineDropdown > button.open {
+        border-color: var(--main-color) !important;
+        box-shadow:
+            0 4px 16px color-mix(in srgb, var(--main-color) 20%, transparent) !important;
+        color: var(--vp-c-text-1) !important;
+    }
+
+    .VPLocalNavOutlineDropdown > button .menu-text {
+        display: inline !important;
+    }
+
+    .VPLocalNavOutlineDropdown > button .icon {
+        display: inline-block !important;
+        margin: 0 !important;
+    }
+
+    .VPLocalNavOutlineDropdown .items {
+        position: fixed !important;
+        bottom: 64px !important;
+        right: 16px !important;
+        top: auto !important;
+        left: auto !important;
+        width: fit-content !important;
+        min-width: 200px !important;
+        max-width: 280px !important;
+        max-height: calc(100vh - 200px) !important;
+        overflow-y: auto !important;
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--vp-c-border) 40%, transparent) transparent;
+        background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+        -webkit-backdrop-filter: blur(60px) saturate(200%) !important;
+        backdrop-filter: blur(60px) saturate(200%) !important;
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+        border-radius: 12px !important;
+        box-shadow:
+            0 4px 16px color-mix(in srgb, var(--main-color) 15%, transparent),
+            0 8px 32px color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+    }
+}
+
+/* PC 端不改 */
+@media (min-width: 1280px) {
+    .VPLocalNavOutlineDropdown > button,
+    .VPLocalNavOutlineDropdown .items {
+        all: revert !important;
+    }
+}
+
+.VPLocalNavOutlineDropdown .header,
+.VPLocalNavOutlineDropdown .outline {
+    background-color: transparent !important;
+}
+
+/* 深色模式 */
+.dark .VPDocAsideOutline .content {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 40%, transparent) !important;
+}
+
+.dark .VPLocalNavOutlineDropdown .items {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+}
+
+/* ========== PC 悬浮液态玻璃 ========== */
+@media (min-width: 960px) {
+    .VPNav {
+        left: 16px !important;
+        right: 16px !important;
+        width: auto !important;
+        top: 8px !important;
+    }
+    .VPNavBar {
+        border-radius: 20px;
+        box-shadow:
+        0 2px 4px color-mix(in srgb, var(--main-color) 20%, transparent),
+        0 4px 8px color-mix(in srgb, var(--main-color) 15%, transparent),
+        0 8px 16px color-mix(in srgb, var(--main-color) 10%, transparent);
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 70%, transparent) !important;
+        background-color: color-mix(in srgb, var(--vp-c-bg) 40%, transparent) !important;
+    }
+
+    /* 搜索框样式增强 */
+    .VPNavBar .VPNavBarSearchButton {
+        background-color: color-mix(in srgb, var(--vp-c-bg) 80%, transparent) !important;
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 60%, transparent) !important;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px color-mix(in srgb, #000 8%, transparent);
+    }
+    .VPNavBar .VPNavBarTitle {
+        background-color: transparent !important;
+    }
+    .VPNavBar.has-sidebar .title {
+        background-color: transparent !important;
+    }
+
+    .VPSidebar {
+        top: calc(var(--vp-nav-height) + 16px) !important;
+        left: max(16px, calc((100vw - var(--vp-layout-max-width)) / 2 + 16px)) !important;
+        bottom: 16px !important;
+        width: var(--vp-sidebar-width) !important;
+        max-width: var(--vp-sidebar-width) !important;
+        padding: 16px !important;
+        border-radius: 20px;
+        box-shadow:
+        0 2px 4px color-mix(in srgb, var(--main-color) 20%, transparent),
+        0 4px 8px color-mix(in srgb, var(--main-color) 15%, transparent),
+        0 8px 16px color-mix(in srgb, var(--main-color) 10%, transparent) !important;
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 70%, transparent) !important;
+        background-color: color-mix(in srgb, var(--vp-c-bg) 30%, transparent) !important;
+    }
+}
+
+/* 深色模式液态玻璃调优 */
+.dark .VPNavBar {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 55%, transparent) !important;
+    border-color: color-mix(in srgb, var(--vp-c-border) 30%, transparent) !important;
+    box-shadow:
+    0 4px 16px color-mix(in srgb, var(--main-color) 8%, transparent),
+    0 8px 32px color-mix(in srgb, var(--main-color) 5%, transparent) !important;
+}
+
+.dark .VPSidebar {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 55%, transparent) !important;
+    border-color: color-mix(in srgb, var(--vp-c-border) 30%, transparent) !important;
+    box-shadow:
+    0 4px 16px color-mix(in srgb, var(--main-color) 8%, transparent),
+    0 8px 32px color-mix(in srgb, var(--main-color) 5%, transparent) !important;
+}
+
+/* 深色模式下拉菜单 */
+.dark .VPNavScreen {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+    border-color: color-mix(in srgb, var(--vp-c-border) 25%, transparent) !important;
+}
+
+.dark .VPBackdrop {
+    background: rgba(0, 0, 0, 0.25) !important;
+}
+
+@media (min-width: 960px) {
+    .dark .VPNavBar {
+        background-color: color-mix(in srgb, var(--vp-c-bg) 35%, transparent) !important;
+    }
+    .dark .VPSidebar {
+        background-color: color-mix(in srgb, var(--vp-c-bg) 30%, transparent) !important;
+    }
+}
+
+
+/* ========== 文档表格样式优化 ========== */
+/* 移动端表格基础样式 */
+.vp-doc table {
+    display: table !important;
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100% !important;
+    table-layout: auto;
+    min-width: 100%;
+}
+
+/* 表头强调色 */
+.vp-doc table th {
+    background-color: var(--vp-c-indigo-soft);
+    color: var(--main-color);
+    font-weight: 600;
+}
+
+.vp-doc table th,
+.vp-doc table td {
+    border: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--vp-c-border) 60%, transparent);
+    padding: 10px 14px;
+    text-align: left;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: nowrap;
+    min-width: 80px;
+}
+
+.vp-doc table tr:last-child td {
+    border-bottom: none;
+}
+
+/* 深色模式适配 */
+.dark .vp-doc table,
+.dark .vp-doc table th,
+.dark .vp-doc table td {
+    border-color: color-mix(in srgb, var(--vp-c-border) 50%, transparent);
+}
+
+/* 表格响应式处理 - 移动端可滚动 */
+.vp-doc .table-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px color-mix(in srgb, var(--main-color) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 60%, transparent);
+}
+
+.vp-doc .table-scroll-wrapper table {
+    margin: 0;
+}
+
+/* PC端（768px以上）：表格完整显示，禁止滚动 */
+@media (min-width: 768px) {
+    .vp-doc .table-scroll-wrapper {
+        overflow: hidden;
+        border-radius: 10px;
+    }
+
+    .vp-doc table,
+    .vp-doc .table-scroll-wrapper table {
+        border-radius: 10px;
+        overflow: hidden;
+        table-layout: fixed;
+    }
+
+    .vp-doc table th,
+    .vp-doc table td {
+        white-space: normal;
+        word-break: break-word;
+        min-width: 0;
+        padding: 12px 16px;
+    }
+}
+
+
+/* ========== 友链卡片样式统一优化 ========== */
+.link-wrapper a {
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 80%, transparent);
+    box-shadow: 0 2px 12px color-mix(in srgb, var(--main-color) 10%, transparent) !important;
+    overflow: hidden; /* 内容约束在方框内，不溢出圆角 */
+}
+
+.link-wrapper a:hover {
+    border-color: var(--main-color);
+    box-shadow: 0 4px 16px color-mix(in srgb, var(--main-color) 18%, transparent) !important;
+    transform: translateY(-2px);
+}
+
+/* 站点名称：单行末尾省略，避免生硬裁断 */
+.link-wrapper h3 {
+    text-overflow: ellipsis !important;
+}
+
+/* 深色模式友链边框适配 */
+.dark .link-wrapper a {
+    border-color: color-mix(in srgb, var(--vp-c-border) 70%, transparent);
+}
+
+.link-wrapper a,
+.link-wrapper .LinkSite {
+    overflow: hidden;
+}
+
+.link-wrapper .site-name,
+.link-wrapper .site-desc {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    max-width: 100%;
+    display: block;
+}
+
+
+/* ========== Twikoo 评论区液态玻璃 ========== */
+.twikoo {
+    /* 评论卡片液态玻璃 */
+    .tk-comments-container > .tk-comment {
+        background-color: color-mix(in srgb, var(--vp-c-bg) 40%, transparent) !important;
+        -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+        backdrop-filter: blur(40px) saturate(200%) !important;
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+        border-radius: 16px !important;
+        box-shadow:
+        0 2px 8px color-mix(in srgb, var(--main-color) 12%, transparent),
+        0 4px 16px color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+        &:hover {
+            border-color: var(--main-color) !important;
+            box-shadow:
+            0 4px 12px color-mix(in srgb, var(--main-color) 20%, transparent),
+            0 8px 24px color-mix(in srgb, var(--main-color) 12%, transparent) !important;
+            transform: translateY(-2px) !important;
+        }
+    }
+
+    /* 回复评论：扁平化，不要独立容器 */
+    .tk-replies-expand > .tk-comment {
+        background-color: transparent !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        border-top: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+        box-shadow: none !important;
+        padding-top: 12px !important;
+        margin-top: 12px !important;
+        &:hover {
+            transform: none !important;
+            box-shadow: none !important;
+            border-top-color: var(--main-color) !important;
+        }
+    }
+
+    /* 输入框液态玻璃 */
+    .el-textarea__inner,
+    .el-input__inner,
+    .el-input-group__prepend,
+    .el-input-group__append {
+        background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+        -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
+        backdrop-filter: blur(40px) saturate(200%) !important;
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 50%, transparent) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--main-color) 10%, transparent) !important;
+        transition: box-shadow 0.25s ease, border-color 0.25s ease !important;
+    }
+
+    .el-textarea__inner:focus,
+    .el-input__inner:focus,
+    .el-input-group__prepend:focus-within,
+    .el-input-group__append:focus-within {
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--main-color) 20%, transparent) !important;
+        border-color: var(--main-color) !important;
+    }
+
+    /* 展开按钮 */
+    .tk-expand {
+        background-color: color-mix(in srgb, var(--vp-c-bg) 45%, transparent) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+        backdrop-filter: blur(30px) saturate(200%) !important;
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+        border-radius: 8px !important;
+    }
+
+    /* 深色模式 */
+    .tk-comments-container > .tk-comment,
+    .tk-replies-expand > .tk-comment {
+        background-color: color-mix(in srgb, var(--vp-c-bg) 45%, transparent) !important;
+    }
+    .el-textarea__inner {
+        background-color: color-mix(in srgb, var(--vp-c-bg) 55%, transparent) !important;
+    }
+}
+
+/* ========== Twikoo 评论区主题适配 ========== */
+.twikoo {
+    /* Twikoo 加载遮罩全元素主题色强制覆盖 */
+    .el-loading-spinner {
+        color: var(--main-color) !important;
+        @apply flex items-center justify-center;
+    }
+    .el-loading-spinner .circular {
+        stroke: var(--main-color) !important;
+    }
+    .el-loading-spinner svg path,
+    .el-loading-spinner svg circle {
+        stroke: var(--main-color) !important;
+    }
+    .el-loading-text {
+        color: var(--main-color) !important;
+    }
+    .el-icon-loading {
+        color: var(--main-color) !important;
+    }
+
+
+    /* 操作栏按钮/图标：纯文字着色，无额外背景 */
+    .tk-actions button,
+    .tk-actions .el-button,
+    .tk-actions .tk-action-btn,
+    .tk-actions .tk-action-icon,
+    .tk-actions .tk-action-icon-solid {
+        color: var(--main-color) !important;
+        background: transparent !important;
+        transition: color 0.2s ease;
+    }
+    .tk-actions button:hover,
+    .tk-actions .el-button:hover,
+    .tk-actions .tk-action-btn:hover,
+    .tk-actions .tk-action-icon:hover,
+    .tk-actions .tk-action-icon-solid:hover {
+        color: var(--main-color-light) !important;
+        background: transparent !important;
+    }
+
+    /* 排序按钮：仅文字着色，无额外背景/边框 */
+    .tk-sort-item {
+        color: var(--vp-c-text-2);
+        background: transparent;
+        transition: color 0.2s ease;
+    }
+    .tk-sort-item:hover {
+        color: var(--main-color);
+    }
+    .tk-sort-item.__active {
+        color: var(--main-color);
+        font-weight: 600;
+    }
+
+    /* 操作图标主题色适配 */
+    .tk-action-icon,
+    .tk-action-count,
+    .tk-action-icon-solid {
+        color: var(--main-color) !important;
+        transition: color 0.2s ease;
+    }
+    .tk-action-icon:hover,
+    .tk-action-icon-solid:hover {
+        color: var(--main-color-light) !important;
+    }
+
+
+    /* 评论图标等 SVG 图标染色 */
+    .tk-icon {
+        color: var(--main-color) !important;
+        transition: color 0.2s ease;
+    }
+    .tk-icon:hover {
+        color: var(--main-color-light) !important;
+    }
+
+    /* 单选框/复选框选中主题色 */
+    .el-radio__input.is-checked .el-radio__inner,
+    .el-checkbox__input.is-checked .el-checkbox__inner {
+        border-color: var(--main-color) !important;
+        background-color: var(--main-color) !important;
+    }
+
+    /* 输入框/文本域/选择框 聚焦高亮改为主题色 */
+    .el-input__inner:focus,
+    .el-textarea__inner:focus,
+    .el-select .el-input__inner:focus {
+        border-color: var(--main-color) !important;
+        outline: none;
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--main-color) 20%, transparent) !important;
+    }
+
+    /* 刷新/预览等图标小按钮、文本按钮染色 */
+    .el-button--text,
+    .el-button.is-circle,
+    .tk-action-btn {
+        color: var(--main-color) !important;
+        transition: all 0.2s ease;
+    }
+    .el-button--text:hover,
+    .el-button.is-circle:hover,
+    .tk-action-btn:hover {
+        color: var(--main-color-light) !important;
+        background-color: color-mix(in srgb, var(--main-color) 10%, transparent) !important;
+    }
+    .el-button--text:active,
+    .el-button.is-circle:active,
+    .tk-action-btn:active {
+        color: var(--main-color-dark) !important;
+    }
+
+    /* 下拉菜单选中项主题色 */
+    .el-select-dropdown__item.selected {
+        color: var(--main-color) !important;
+        font-weight: 600;
+    }
+
+    /* Twikoo 主按钮主题色适配 */
+    .el-button--primary {
+        background-color: var(--main-color) !important;
+        border-color: var(--main-color) !important;
+        color: #ffffff !important;
+        transition: all 0.2s ease;
+    }
+    .el-button--primary:hover {
+        background-color: var(--main-color-light) !important;
+        border-color: var(--main-color-light) !important;
+        color: #ffffff !important;
+    }
+    .el-button--primary:active {
+        background-color: var(--main-color-dark) !important;
+        border-color: var(--main-color-dark) !important;
+        color: #ffffff !important;
+    }
+
+    /* 次要按钮/边框按钮也同步主题色 */
+    .el-button--default {
+        border-color: var(--vp-c-border);
+        color: var(--vp-c-text-2);
+        transition: all 0.2s ease;
+    }
+    .el-button--default:hover {
+        border-color: var(--main-color);
+        color: var(--main-color);
+    }
+
+    .el-input-group__append,
+    .el-input-group__prepend,
+    .el-textarea__inner {
+        @apply border shadow-none;
+        border-color: var(--vp-c-border);
+        background-color: var(--vp-c-bg-soft);
+        color: var(--vp-c-text-1);
+    }
+    .el-input-group__prepend {
+        @apply border-r-0;
+        margin-right: 12px !important;
+    }
+    .el-button--small {
+        @apply h-auto;
+    }
+    .el-textarea > .el-textarea__inner {
+        @apply mt-2 min-h-[117px] rounded-lg;
+    }
+    .tk-preview-container {
+        @apply rounded-lg;
+        border-color: var(--vp-c-border);
+    }
+    .tk-comments-count {
+        @apply text-sm;
+        color: var(--vp-c-text-2);
+    }
+    .tk-nick,
+    .tk-replies .tk-nick-link {
+        @apply mr-1 text-base;
+        color: var(--main-color);
+    }
+    .tk-tag {
+        @apply mr-1;
+    }
+    .tk-comments-container > .tk-comment {
+        @apply mt-0 mb-6 rounded-2xl p-6 transition-all duration-300;
+        background-color: var(--vp-c-bg-soft);
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 60%, transparent);
+        box-shadow: 0 2px 12px color-mix(in srgb, var(--main-color) 8%, transparent);
+        &:hover {
+            border-color: var(--main-color);
+            box-shadow: 0 4px 16px color-mix(in srgb, var(--main-color) 15%, transparent);
+            transform: translateY(-2px);
+        }
+    }
+    .tk-replies-expand > .tk-comment {
+        @apply pt-3;
+        background-color: transparent !important;
+        border: none !important;
+        border-top: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        &:hover {
+            transform: none !important;
+            box-shadow: none !important;
+            border-top-color: var(--main-color) !important;
+        }
+    }
+    .tk-content p {
+        @apply leading-relaxed;
+        color: var(--vp-c-text-2);
+    }
+    a:not(.tk-ruser):not(.tk-nick-link) {
+        @apply font-medium underline underline-offset-2;
+        color: var(--main-color-dark);
+        &:hover {
+            color: var(--main-color);
+        }
+    }
+    .tk-expand {
+        @apply mt-4 rounded-md;
+        background-color: var(--vp-code-block-bg);
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 60%, transparent);
+    }
+    /* 评论区代码块 - 复用主题代码块背景变量 */
+    div.code-toolbar {
+        --code-bg: var(--vp-code-block-bg);
+        @apply rounded-lg;
+        :not(pre) > code[class*='language-'],
+        pre[class*='language-'] {
+            @apply rounded-lg;
+            background: var(--code-bg);
+            box-shadow: none;
+            color: var(--vp-c-text-1);
+        }
+        pre[class*='language-'] {
+            @apply pt-6;
+            &::before {
+                @apply absolute top-3 left-3 z-1 block h-3 w-3 rounded-full;
+                content: '';
+                background-color: var(--mac-window-red, #ff5f56);
+                transform: rotate(0);
+                box-shadow:
+                20px 0 0 var(--mac-window-yellow, #ffbd2e),
+                40px 0 0 var(--mac-window-green, #27c93f);
+            }
+            &::after {
+                content: none;
+            }
+            & > code {
+                @apply rounded-lg p-5 pt-4;
+                border-left: none;
+                background: var(--code-bg);
+                box-shadow: none;
+            }
+        }
+        & > div.toolbar {
+            @apply top-2 right-2 z-1;
+            & > .toolbar-item > button {
+                @apply hidden px-2 py-1 text-xs;
+                color: var(--vp-c-text-3);
+            }
+        }
+        &:hover > div.toolbar > .toolbar-item > button {
+            @apply block;
+        }
+    }
+    .tk-admin-container {
+        @apply z-1;
+    }
+}
+.dark .twikoo {
+    /* 深色模式下调低边框对比度 */
+    .tk-comments-container > .tk-comment,
+    .tk-replies-expand > .tk-comment {
+        border-color: color-mix(in srgb, var(--vp-c-border) 50%, transparent);
+    }
+    /* 移除生硬的亮度滤镜，直接复用深色代码块变量 */
+    div.code-toolbar {
+        :not(pre) > code[class*='language-'],
+        pre[class*='language-'] {
+            filter: none;
+        }
+    }
+}
+
+/* ========== 代码块液态玻璃样式 ========== */
+
+/* 代码块容器 */
+.vp-doc div[class*='language-'] {
+    background-color: color-mix(in srgb, var(--vp-code-block-bg) 85%, transparent) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 30%, transparent) !important;
+    border-radius: 12px !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, var(--main-color) 8%, transparent),
+    0 4px 16px color-mix(in srgb, var(--main-color) 5%, transparent) !important;
+    overflow: hidden !important;
+}
+
+/* 代码块背景 */
+.vp-doc div[class*='language-'] code,
+.vp-doc div[class*='language-'] pre {
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+}
+
+/* 代码块标题栏 */
+.vp-doc div[class*='language-'] > span.lang {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    z-index: 2;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--vp-c-text-3);
+    background-color: color-mix(in srgb, var(--vp-c-bg) 60%, transparent);
+    padding: 2px 8px;
+    border-radius: 6px;
+    backdrop-filter: blur(10px);
+}
+
+/* 行号 */
+.vp-doc div[class*='language-'] .line-numbers {
+    color: var(--vp-c-text-3) !important;
+    border-right: 1px solid color-mix(in srgb, var(--vp-c-border) 20%, transparent) !important;
+    padding-right: 12px !important;
+    margin-right: 12px !important;
+}
+
+/* 复制按钮 */
+.vp-doc div[class*='language-'] > button.copy {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    z-index: 2;
+    background-color: color-mix(in srgb, var(--vp-c-bg) 60%, transparent) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid color-mix(in srgb, var(--vp-c-border) 30%, transparent) !important;
+    border-radius: 6px !important;
+    color: var(--vp-c-text-3) !important;
+    transition: all 0.2s ease !important;
+}
+
+.vp-doc div[class*='language-'] > button.copy:hover {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 80%, transparent) !important;
+    color: var(--vp-c-text-1) !important;
+    border-color: var(--main-color) !important;
+}
+
+/* 内联代码 */
+.vp-doc :not(pre) > code {
+    background-color: color-mix(in srgb, var(--main-color) 10%, transparent) !important;
+    color: var(--main-color) !important;
+    border-radius: 6px !important;
+    padding: 2px 6px !important;
+    font-size: 0.875em !important;
+    font-weight: 500 !important;
+    border: 1px solid color-mix(in srgb, var(--main-color) 20%, transparent) !important;
+}
+
+/* 深色模式代码块 */
+.dark .vp-doc div[class*='language-'] {
+    background-color: color-mix(in srgb, var(--vp-code-block-bg) 90%, transparent) !important;
+    border-color: color-mix(in srgb, var(--vp-c-border) 20%, transparent) !important;
+    box-shadow:
+    0 2px 8px color-mix(in srgb, #000 15%, transparent),
+    0 4px 16px color-mix(in srgb, #000 8%, transparent) !important;
+}
+
+.dark .vp-doc div[class*='language-'] > span.lang {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent);
+}
+
+.dark .vp-doc div[class*='language-'] > button.copy {
+    background-color: color-mix(in srgb, var(--vp-c-bg) 50%, transparent) !important;
+}
+
+.dark .vp-doc :not(pre) > code {
+    background-color: color-mix(in srgb, var(--main-color) 15%, transparent) !important;
+    border-color: color-mix(in srgb, var(--main-color) 25%, transparent) !important;
+}
+
+/* ========== 移动端容器按钮液态玻璃 ========== */
+@media (max-width: 959px) {
+    [data-v-090776b2] {
+        background-color: color-mix(in srgb, var(--vp-c-bg) 45%, transparent) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(200%) !important;
+        backdrop-filter: blur(20px) saturate(200%) !important;
+        border: 1px solid color-mix(in srgb, var(--vp-c-border) 40%, transparent) !important;
+        border-radius: 12px !important;
+        box-shadow:
+            0 2px 8px color-mix(in srgb, var(--main-color) 12%, transparent),
+            0 4px 16px color-mix(in srgb, var(--main-color) 8%, transparent) !important;
+    }
+}
