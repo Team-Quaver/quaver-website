@@ -4,13 +4,13 @@
 
 ## Linux
 
-### X86-64（适合大多数 Linux 平台）
+### X86-64（适合 AMD / Intel / 兆芯 / 海光平台）
 
-[![Github](https://img.shields.io/badge/github-blue?logo=github&style=for-the-badge)](https://github.com/team-quaver/quaver-music) [![Gitee Pending](https://img.shields.io/badge/gitee-%E5%BE%85%E5%AE%9A-blue?logo=gitee&style=for-the-badge)](https://github.com/team-quaver/quaver-music)
+[![Github](https://img.shields.io/badge/github-blue?logo=github&style=for-the-badge)](https://github.com/Team-Quaver/quaver-music/releases/latest) [![Gitee Pending](https://img.shields.io/badge/gitee-%E5%BE%85%E5%AE%9A-blue?logo=gitee&style=for-the-badge)](https://github.com/Team-Quaver/quaver-music/releases/latest)
 
-### ARM（适合飞腾、海思、高通、NVIDIA DGX Spark/RTX Spark 平台）
+### ARM（适合飞腾、海思、高通骁龙、NVIDIA Spark 平台）
 
-[![Github](https://img.shields.io/badge/github-blue?logo=github&style=for-the-badge)](https://github.com/team-quaver/quaver-music) [![Gitee Pending](https://img.shields.io/badge/gitee-%E5%BE%85%E5%AE%9A-blue?logo=gitee&style=for-the-badge)](https://github.com/team-quaver/quaver-music)
+[![Github](https://img.shields.io/badge/github-blue?logo=github&style=for-the-badge)](https://github.com/Team-Quaver/quaver-music/releases/latest) [![Gitee Pending](https://img.shields.io/badge/gitee-%E5%BE%85%E5%AE%9A-blue?logo=gitee&style=for-the-badge)](https://github.com/Team-Quaver/quaver-music/releases/latest)
 
 ### 龙芯
 
