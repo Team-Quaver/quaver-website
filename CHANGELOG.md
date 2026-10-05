@@ -1,5 +1,17 @@
 # 更新日志
 
+## v1.2.1 
+
+### 优化
+
+- 将歌单的双击和右键菜单逻辑加入至每日 30 首和我喜欢中
+- 由于 Linux 的 Ctrl + Alt + F5 会跳转 TTY，故暂停全局快捷键为 Ctrl + Alt + P
+- 修改部分文案
+
+### 修复
+
+- 修复了一个 TypeScript 的类型错误 `globalShortcut.isAccelerator`，该类型错误会导致 Windows 和 OS X 平台无法注册快捷键
+
 ## v1.2.0 Ellen / Phoebe
 
 ### Typhoeus-Go
