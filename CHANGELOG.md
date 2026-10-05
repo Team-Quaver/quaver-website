@@ -1,4 +1,101 @@
-# 更新日志 
+# 更新日志
+
+## v1.2.0 Ellen / Phoebe
+
+### Typhoeus-Go
+
+Quaver Music 全新后端，Typhoeus-Go 现已正式上线！
+
+原定 1.3 Ellen Eevanescia 版本上线，在经过打磨后，可提前到该版本
+
+该版本的 Typhoeus 后端从 Python（L-1124/QQMusicAPI） 与 Typhoeus 迁移到基于 Go 语言的 Typhoeus-Go，欢迎后端开发者踊跃贡献！
+
+链接：https://github.com/Team-Quaver/typhoeus-go
+
+目前仅迁移与 QM 交互的相关部分，系统集成部分将会尝试从 TypeScript 迁移到 Golang（包括媒体控制 + 电源管理）
+
+### 平台
+
+- 由于 Golang 本体支持交叉编译，现在已试验性为龙芯 ABI 2.0 打包，使用 Electron 34
+
+### 杂项
+
+- 由于部分软件会将该应用认为系节奏游戏 Quaver，故该版本的 dist 名字现已改为 `Quaver Music`
+- 由于部分桌面有严格的 XDG 桌面门户注册机制，故该版本的 AppID 现已改成 `red.0w0.quaver`
+
+### 后端
+
+- 现已支持臻品全景声 7.1（atmos71）播放，原定支持 Dolby Atmos 和 DTS:X 由于 MPV 解码器问题故不选择支持，未来如能实现 Go + FFmpeg 则再考虑。
+- 现已试验性支持通过 QQ 音乐的会员门控播放会员能播的部分歌曲，非 QQ 音乐会员请勿汇报相关问题（如《视奸》）
+  - 已知问题：目前只支持 HQ320 Ogg
+  - 已知问题：加载速度会偏慢
+
+### 特性
+
+- 支持非 Karaoke 模式（关闭 AMLL 插件）后的文本大小调节
+- 支持随机播放模式
+- 支持音频信息流显示
+- 支持歌单的快速插队/删除
+- 支持全局快捷键（Linux 走 XDG 桌面门户，请确保桌面环境支持）
+
+### 修复
+
+- 修复了从歌单删除歌曲后，点击别的歌曲播放后却跳转到新对应偏好歌曲
+
+### 已知问题
+
+- 应用图标渲染有问题
+
+## v1.1.2 Ellen / Cyrene End
+
+### 优化
+
+- 优化了歌单的热刷新的逻辑
+
+## v1.1.1
+
+### 优化
+
+- 禁止了行为外点击跳转（新建多窗口，点击后键盘控制焦点仍在点击区域）
+- 实现了上一首的逻辑设置，现可设置为
+- 修复了音质菜单绑定播放控制器，而导致无法滚轮滚动选项的问题
+
+
+## v1.1.0 Ellen / Cyrene
+
+### 平台支持
+
+- 现已支持以下新平台：
+  - Windows x86-64
+  - Windows on ARM
+  - macOS Apple Silicon
+
+由于 macOS AMD64 平台已经是 Legacy 平台，故决定不再维护，龙芯由于无构建机构建 PyInstaller，远端 QEMU 部署又过慢而不进行构建，正在筹备全新后端的版本，使用 Go 构建，[仓库在这](https://github.com/Team-Quaver/typhoeus-go)，将会于 1.2 Ellen Phoebe 或 1.3 Ellen Evanescia 中上线。
+
+可在 v1.3.0-TyphoeusGo-Early-Alpha 版本中品鉴
+
+--- 
+
+### 特性
+
+- Sparkle： Quaver Music 的插件系统，名字灵感来源于《崩坏：星穹铁道》角色花火，SDK 已开源（但并不完整）
+  - Sparkle Marketplace 等待上线
+- 现以支持 AMLL 插件化驱动的 QRC 逐字歌词系统
+  - 在 dynamic lyrics 测试版中，使用的是集成 SPlayer 的 Lyrics-Kit + Lyrics-DOM，在考虑过后，选择了使用 AMLL
+- 正在播放页（NowPlaying）现已经支持更多选项，翻译选项已经移动进去（支持同名搜索，跳转歌手、专辑）
+- Linux：现已支持基于 XDG 桌面门户与 Logind 直连的睡眠抑制器
+- Linux：现已支持通过桌面音量调节器管理播放器音量
+- macOS/Windows：现已支持通过 Objective-C 实现 NowPlaying + C# 实现 SMTC
+- 现已支持全屏（画廊）模式
+  - 未来版本中，将会支持 Cover Flow 插件，复刻老版本 iTunes 的横屏设计
+
+---
+
+### 优化
+
+- 减少了一部分死代码和内存泄漏导致的内存占用过高的 Bug，在 Linux 平台，该版本会比官方客户端内存占用少一半以上
+- 已”屏蔽“ Chromium 默认焦点高亮系统，未来上线快捷键功能后将会禁用键盘操作（预计 Ellen Phoebe 上线的功能）
+- 修复歌词的竞态问题
 
 ## v1.0.5 - Ellen / Chisa End
 

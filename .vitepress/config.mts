@@ -189,7 +189,7 @@ export default defineConfig({
       {
         text: '开发（WIP）',
         items: [
-          { text: '插件', link: '/plugins' },
+          { text: '插件', link: '/sparkle-dev' },
           { text: '前端模块', link: '/quaver-frontend' },
           { text: 'Typhoeus - TypeScript', link: '/typhoeus-ts' },
           { text: 'Typhoeus - Python', link: '/typhoeus-py' },
