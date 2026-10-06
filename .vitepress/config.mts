@@ -170,6 +170,7 @@ export default defineConfig({
       { text: '主页', link: '/' },
       { text: '文档', link: '/guide/' },
       { text: '免责协议', link: '/agreement' },
+      { text: 'Quaver Astra', link: '/quaver-astra.md' },
       { text: '友链', link: '/links.md' },
     ],
     socialLinks: [
@@ -190,13 +191,11 @@ export default defineConfig({
         text: '开发（WIP）',
         items: [
           { text: '插件', link: '/sparkle-dev' },
-          { text: '前端模块', link: '/quaver-frontend' },
-          { text: 'Typhoeus - TypeScript', link: '/typhoeus-ts' },
-          { text: 'Typhoeus - Python', link: '/typhoeus-py' },
+          { text: 'Typhoeus', link: '/typhoeus' },
         ],
       },
       {
-        text: 'Q/A',
+        text: 'Q/A（WIP）',
         items: [
           { text: 'Crotchet Mode - 调试模式', link: '/crotchet' },
           { text: 'macOS 常见问题', link: '/macos-issues' },
