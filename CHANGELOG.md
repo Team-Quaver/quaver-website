@@ -1,5 +1,41 @@
 # 更新日志
 
+## v1.3.1 
+
+- 修复了 Windows 环境下无法使用 Sparkle 插件的 Bug
+
+## v1.3.0 Evanescia
+
+该版本开发代号取自于《崩坏：星穹铁道》绯英，自该版本后，除进入 2.0 世代，不再使用大版本开发代号 Ellen
+
+### 特性
+- 支持 Tray 控制上下曲、循环模式、暂停
+  - 未来可能会上线音量调节
+- 支持了睡眠抑制功能（已在 Windows 和 Linux 测试）
+- 支持了 AppImage / Windows 更新功能
+- 支持了 Nightly & Stable 分支替换功能
+- 启用了 Sparkle Marketplace 功能
+- 支持了手动安装插件与手动安装插件警告
+
+### Sparkle SDK
+
+Sparkle SDK 于这个版本扩展，可支持更加百变的插件，扩展，详细可看 https://quaver.0w0.red/sparkle-dev.html
+
+### 优化
+
+- 由于启用了 Sparkle Marketplace，Sparkle 设置现已重新设计
+- 音质获取不再前端完全显示，先嗅探，再前端做渲染
+- 启用主题后，可在外观配置主题
+
+### 全新官方插件
+
+本次更新插件不遂包推送，请前往 Marketplace 下载
+
+- Aura 夜挥
+  - 主题/ CI 测试插件，深色模式改变配色方案的插件
+- Flowscape 流境
+  - 该插件提供了类似 iTunes Cover Flow 的体验，由于 Cover Flow 系苹果的商标，所以叫 Flowscape
+
 ## v1.2.2
 
 - 修复了潜在的图标渲染问题
