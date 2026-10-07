@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "quaver-astra.md",
+                "file": "sparkle-dev.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "quaver-astra"
+              "title": "sparkle-dev"
             }
           }
         ]
@@ -187,12 +187,13 @@
   },
   "active": "e369811bb940149c",
   "lastOpenFiles": [
+    "sparkle/index.md",
+    "quaver-astra.md",
     "quaver-frontend.md",
     "typhoeus.md",
     "sparkle-dev.md",
     "typhoeus-ts.md",
     "README.md",
-    "quaver-astra.md",
     "wayland-issues.md",
     "CHANGELOG.md",
     "download/index.md",

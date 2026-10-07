@@ -170,7 +170,7 @@ export default defineConfig({
       { text: '主页', link: '/' },
       { text: '文档', link: '/guide/' },
       { text: '免责协议', link: '/agreement' },
-      { text: 'Quaver Astra', link: '/quaver-astra.md' },
+      { text: '下载', link: '/download/' },
       { text: '友链', link: '/links.md' },
     ],
     socialLinks: [
@@ -185,6 +185,7 @@ export default defineConfig({
           { text: '免责协议', link: '/agreement' },
           { text: '插件', link: '/sparkle/' },
           { text: '下载', link: '/download/' },
+          { text: 'Quaver Astra', link: '/quaver-astra.md' },
         ],
       },
       {
