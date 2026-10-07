@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "updated": "2026-10-07T08:28:04.183Z",
+  "plugins": [
+    {
+      "id": "aurora",
+      "name": "Aurora 夜辉",
+      "version": "1.0.0",
+      "author": "Team Quaver",
+      "description": "极光色调的 Sparkle 主题：深蓝夜空底 + 极光绿强调色（Marketplace 流水线示例插件）",
+      "category": "theme",
+      "download": "https://quaver.0w0.red/sparkle/plugins/aurora.js",
+      "homepage": "https://github.com/Team-Quaver/quaver-sparkle",
+      "hash": "1cc3e2647064e8fe76e80a06c89c60aa725e4b5c912a1dc60cae0f7e8e403f64"
+    }
+  ]
+}
