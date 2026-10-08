@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-10-07T13:04:33.633Z",
+  "updated": "2026-10-08T11:11:20.091Z",
   "plugins": [
     {
       "id": "aurora",
@@ -16,13 +16,13 @@
     {
       "id": "flowscape",
       "name": "Flowscape 流境",
-      "version": "1.2.0",
+      "version": "1.4.0",
       "author": "Team Quaver",
-      "description": "把正在播放页变成专辑流（Cover Flow）：中间大封面、左右相邻封面可点切歌，下方歌名/歌手/专辑/滚动歌词，底部自绘进度条、音量与音质（接管时隐藏原播放条）",
+      "description": "一个复刻移动听歌史上最经典的播放页模式的插件",
       "category": "plugin",
       "download": "https://quaver.0w0.red/sparkle/plugins/flowscape.js",
       "homepage": "https://github.com/Team-Quaver/quaver-sparkle",
-      "hash": "3bae3ac8fe221f749118860146b82c75ce32cfbedc673659a1baa440a7d4a46b"
+      "hash": "8017dc95429d9b8ed828d679974b1e257adad467a0eed61499e9df4661810d93"
     }
   ]
 }
