@@ -1,5 +1,48 @@
 # 更新日志
 
+## v1.4.0 Aemeath
+
+### 重构
+
+- 为主题系统解放了一些硬编码 CSS 变量
+
+### 功能
+#### Quaver Design
+- 现已支持背景自定义
+- 现已支持菜单毛玻璃开关
+- 现已支持高亮自定义
+- 现已支持特定 Shell / 桌面环境高亮 Tint
+
+#### Sparkle
+- Sparkle SDK 现已继续扩展功能
+- Sparkle Theme 现已支持功能让位
+
+### 优化
+- 自动更新现已加入 Beta 版本更新，每次大版本会按需提供 Beta 版本
+
+### Typhoeus-Go
+- 现已支持如 DECO*27 - 《モニタリング》 加密流的高音质播放
+
+### 官方插件更新
+
+## v1.3.2 - 1.3.4
+
+### 优化
+- 优化了托盘上下文菜单歌曲信息过长的问题
+
+### 修复
+- 修复了 macOS 下潜在的 MPV 问题（由于 Mach-O 会对旧 OS 做 Breaking Change，故目前只支持 macOS 14 + ）
+- 修复了 macOS 下 Tray 图标过大的问题
+  - 我们因此统一了单色托盘图标
+- 修复了由于 Electron 仅读 GTK 主题设置深浅色模式导致托盘图标无法变色的问题
+- 修复了 Flowscope 流境插件的封面问题
+- 修复了 Windows 托盘图标颜色翻转的 Bug
+
+### 重构
+
+- 前端所有 JavaScript 代码已全部迁移至 TypeScript
+
+
 ## v1.3.1 
 
 - 修复了 Windows 环境下无法使用 Sparkle 插件的 Bug
