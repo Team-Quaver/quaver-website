@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-10-09T07:36:05.239Z",
+  "updated": "2026-10-09T08:25:51.013Z",
   "plugins": [
     {
       "id": "aurora",
@@ -22,7 +22,7 @@
       "category": "plugin",
       "download": "https://quaver.0w0.red/sparkle/plugins/flowscape.js",
       "homepage": "https://github.com/Team-Quaver/quaver-sparkle",
-      "hash": "e413000e4d982139cee937078e83621f67856258e2bc60ee1d470e6cdaace36b"
+      "hash": "8a0cef48c1a3759bdc05053925d0c866ee3433c39a8eb1ac8844d53b9bcbc8c6"
     },
     {
       "id": "md3",
