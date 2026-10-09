@@ -2,28 +2,55 @@
 
 ## v1.4.0 Aemeath
 
+欢迎来到 Quaver Music v1.4.0 Aemeath，这是 Quaver Music 百变的开始，也是持续进化的开始。
+
+自该版本开始，Quaver Music 步入稳定阶段，也会持续重构一些影响体验的地方
+
 ### 重构
 
 - 为主题系统解放了一些硬编码 CSS 变量
 
 ### 功能
-#### Quaver Design
+
+#### Quaver Design（默认主题）
+
 - 现已支持背景自定义
 - 现已支持菜单毛玻璃开关
 - 现已支持高亮自定义
-- 现已支持特定 Shell / 桌面环境高亮 Tint
+- 现已支持特定 Shell / 桌面环境高亮 Tint 
 
-#### Sparkle
-- Sparkle SDK 现已继续扩展功能
-- Sparkle Theme 现已支持功能让位
+#### Sparkle（花火插件）
+
+- 花火插件 SDK 现已继续扩展功能
+- 花火插件 Theme 现已支持功能让位
 
 ### 优化
+
+- Quaver Design 的 ContentView，现已支持吸顶模式
+- 优化 Quaver Design 的搜索栏与 CSD 以与吸顶接壤
+- 优化设置页，让设置页标题和 Tab 固定 
+- Quaver Design 自该版本后，背景默认设置为无
+- Quaver Design 自该版本后，Tint 默认设置为青色
 - 自动更新现已加入 Beta 版本更新，每次大版本会按需提供 Beta 版本
 
 ### Typhoeus-Go
-- 现已支持如 DECO*27 - 《モニタリング》 加密流的高音质播放
+
+- 现已支持如 DECO*27 - 《モニタリング》 QMC 的高音质播放
+  - 为资产和项目安全，该行为不会落盘，仅在内存完成
 
 ### 官方插件更新
+
+#### Flowscope 流境
+
+- 现已支持多行歌词
+- 优化多封面动画
+- 移除了影响观感的歌词阴影
+
+#### Lumen 流光
+
+- 首次亮相，这是一个让 1.4 版本以上可美化成 Material Design 3 的主题插件，提供 Tint 系统
+  - 已在 Noctalia 中测试，也支持 Plasma
+  - 同时能够影响 NowPlaying 与 Flowscope 插件
 
 ## v1.3.2 - 1.3.4
 
