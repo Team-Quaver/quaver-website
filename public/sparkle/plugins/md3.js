@@ -73,8 +73,25 @@ var d=e=>e;var r=(e,a,o)=>o===void 0?{tone:e,chroma:a}:{tone:e,chroma:a,hueShift
   }
   /* \u5438\u9876\u6761 / \u5438\u9876\u9875\u5934 = M3 app bar\uFF1A\u81EA\u5DF1\u94FA\u5B9E\u5E95 surface\u3002\u672A\u8D34\u9876\u65F6\u5E95\u8272\u4E0E\u5185\u5BB9\u533A\u540C\u8272
      \uFF08--panel \u5C31\u662F surface\uFF09\uFF0C\u7B49\u4E8E\u4E0D\u53EF\u89C1\uFF0C\u7248\u5F0F\u7167\u65E7\uFF1B\u8D34\u9876\u540E\u4ECE\u5E95\u4E0B\u6EDA\u8FC7\u53BB\u7684\u884C\u88AB\u5B83\u6321\u4F4F\u3002
-     \u53F3\u7F18\u90A3\u6761 10px \u6EDA\u52A8\u6761\u69FD\u9732\u7684\u662F\u5185\u5BB9\u5361\u5E95\u8272\uFF08\u540C\u4E00\u4E2A surface\uFF09\uFF0C\u6240\u4EE5\u4E0D\u4F1A\u7559\u7F1D\u3002 */
+     \u53F3\u7F18\u90A3\u6761 10px \u6EDA\u52A8\u6761\u69FD\u9732\u7684\u662F\u5185\u5BB9\u5361\u5E95\u8272\uFF08\u540C\u4E00\u4E2A surface\uFF09\uFF0C\u6240\u4EE5\u4E0D\u4F1A\u7559\u7F1D\u3002
+
+     \u5149\u6709\u5B9E\u5E95\u4E0D\u591F\uFF1A\u5BBF\u4E3B\u5438\u9876\u8BED\u8A00\u91CC\u300C\u538B\u4E0D\u4F4F\u7684\u90A3\u622A\u300D\u4E00\u76F4\u662F\u4EA4\u7ED9 .content::before \u7684\u6E10\u9690
+     \u5316\u5F00\u7684\uFF08Quaver Design \u4E0B\u5438\u9876\u6761\u81EA\u5DF1\u4E0D\u753B\u5E95\uFF0C\u5168\u9760\u90A3\u5C42\u6E10\u53D8\uFF1B\u8FD9\u91CC\u5E95\u7247\u642C\u5230\u4E86\u5438\u9876\u8282\u70B9
+     \u8EAB\u4E0A\uFF0C\u4E0B\u7F18\u5C31\u6210\u4E86\u786C\u8FB9\uFF09\u3002\u6B63\u4E0B\u6EDA\u8FC7\u7684\u884C\u4F1A\u88AB\u62E6\u8170\u5207\u4E00\u5200 \u2014\u2014 \u89C2\u611F\u50CF bug\uFF0C\u4E0D\u662F\u50CF app bar\u3002
+     \u6240\u4EE5\u7ED9\u8D34\u9876\u6001\u8865\u4E24\u6837\uFF1A\u4E00\u6839 outline-variant \u53D1\u4E1D\u7EBF\u753B\u6E05 app bar \u7684\u4E0B\u754C + \u4E0B\u7F18 20px
+     \u540C\u8272\u6E10\u9690\uFF0C\u628A\u5207\u8FB9\u5316\u5F00\u3002\u4E24\u5C42\u5408\u8D77\u6765\u8BFB\u4F5C\u300C\u5185\u5BB9\u4ECE app bar \u5E95\u4E0B\u6ED1\u8FC7\u53BB\u300D\u3002\u7528 .stuck
+     \uFF08views.ts \u7684 trackStuck \u5199\uFF09\u95E8\u63A7\uFF1A\u672A\u8D34\u9876\u65F6\u8FD9\u4E24\u6837\u90FD\u4E0D\u94FA\uFF0C\u7B2C\u4E00\u5C4F\u7248\u5F0F\u7EB9\u4E1D\u4E0D\u52A8\u3002 */
   & .sticky-bar, & .sticky-head { background: var(--md-surface); }
+  & .sticky-bar::after, & .sticky-head::after {
+    content: ""; position: absolute; left: 0; right: 0; top: 100%; height: 20px;
+    background: linear-gradient(to bottom,
+      var(--md-surface) 0%,
+      color-mix(in srgb, var(--md-surface) 55%, transparent) 45%,
+      transparent 100%);
+    box-shadow: inset 0 1px 0 var(--md-outline-variant);
+    pointer-events: none; opacity: 0; transition: opacity .18s ease;
+  }
+  & .sticky-bar.stuck::after, & .sticky-head.stuck::after { opacity: 1; }
   /* \u62BD\u5C49\u5BBD\u5EA6\uFF1AM3 navigation drawer = 360\u3002\u5BBF\u4E3B\u8BFB\u7684\u662F <body> \u7684 --side-w\uFF0C\u6240\u4EE5\u5199\u5728 body \u4E0A\u3002
      \u7528\u6237\u62D6\u8FC7\u5206\u9694\u6761\u540E body \u4E0A\u662F**\u884C\u5185**\u503C\uFF08shell.ts \u5199\uFF09\uFF0C\u884C\u5185\u4F18\u5148 \u2014\u2014 \u90A3\u65F6\u4EE5\u7528\u6237\u7684\u4E3A\u51C6\u3002 */
   & body { --side-w: 360px; font-size: 14px; line-height: 20px; }
@@ -260,7 +277,7 @@ ${T}
 
   /* ===== \u6B63\u5728\u64AD\u653E / Flowscape \u63A5\u7BA1 ===== */
 ${$}
-`}var P=d({id:"md3",name:"Lumen \u6D41\u5149",version:"1.3.2",minHostVersion:"1.4.1",allowBeta:!0,kind:"third-party",author:"Team Quaver",description:"\u4E00\u6B3E\u590D\u523B Material You \u8BBE\u8BA1\u7684\u4E3B\u9898\u63D2\u4EF6",setup(e){let a=()=>e.storage.get("np")!=="off",o=()=>e.storage.get("npColor")==="deep"?"deep":"theme",i=()=>{typeof document>"u"||(document.documentElement.dataset.md3Np=a()?"on":"off",document.documentElement.dataset.md3NpColor=o())};i(),e.registerTheme({id:"md3",name:"Material Design 3",css:N(),tint:{mode:"presets",presets:l}}),e.registerSettingsSection({id:"md3-theme",title:"\u4E3B\u9898\u8BBE\u7F6E",render(t){t.innerHTML=`
+`}var P=d({id:"md3",name:"Lumen \u6D41\u5149",version:"1.3.3",minHostVersion:"1.4.1",allowBeta:!0,kind:"third-party",author:"Team Quaver",description:"\u4E00\u6B3E\u590D\u523B Material You \u8BBE\u8BA1\u7684\u4E3B\u9898\u63D2\u4EF6",setup(e){let a=()=>e.storage.get("np")!=="off",o=()=>e.storage.get("npColor")==="deep"?"deep":"theme",i=()=>{typeof document>"u"||(document.documentElement.dataset.md3Np=a()?"on":"off",document.documentElement.dataset.md3NpColor=o())};i(),e.registerTheme({id:"md3",name:"Material Design 3",css:N(),tint:{mode:"presets",presets:l}}),e.registerSettingsSection({id:"md3-theme",title:"\u4E3B\u9898\u8BBE\u7F6E",render(t){t.innerHTML=`
           <div class="set-label">\u662F\u5426\u4ECB\u5165\u6B63\u5728\u64AD\u653E\u9875/Flowscape</div>
           <div class="opt-cards">
             <button class="opt-card" data-np="on" type="button">\u5F00\u542F</button>
