@@ -1,6 +1,6 @@
-# 插件（Sparkle）开发
+# 花火插件开发
 
-Sparkle 是 Quaver Music 的插件系统。插件是一个实现 `SparklePlugin` 的对象：在 `setup(ctx)` 里通过 `SparkleContext` 注册扩展点（路由 / 侧栏 / 设置页 / 主题与主题包 / 全站样式层 / 正在播放页 / 右键菜单 / 播放源 / 逐字歌词），返回的函数（可选）作为 dispose，在插件停用时调用。
+花火插件是 Quaver Music 的插件系统。插件是一个实现 `SparklePlugin` 的对象：在 `setup(ctx)` 里通过 `SparkleContext` 注册扩展点（路由 / 侧栏 / 设置页 / 主题与主题包 / 全站样式层 / 正在播放页 / 右键菜单 / 播放源 / 逐字歌词），返回的函数（可选）作为 dispose，在插件停用时调用。
 
 SDK 与官方插件托管在独立仓库 **quaver-sparkle**，以 git submodule 挂在主仓库的 `vendor/Sparkle`（与 `vendor/Typhoeus` 同模式）。ui 的 Vite 通过 alias 把 SDK 源码级打进 `ui/dist`，该仓库不单独构建：
 
@@ -33,9 +33,11 @@ import { definePlugin } from "@quaver/sparkle";
 import { definePlugin } from "@quaver/sparkle";
 
 export default definePlugin({
-  id: "my-plugin",        // kebab-case；第三方必须与安装目录名一致
-  name: "My Plugin",
+  id: "my-plugin",        // kebab-case；第三方必须与安装目录名一致，可用于开发代号
+  name: "My Plugin",     // 插件的显示名
   version: "1.0.0",       // semver 字符串
+  minHostVersion: "1.4.0", // 可选：低于此 Quaver 版本时不允许安装
+  allowBeta: true,          // 可选：允许 1.4.0-beta.x 满足上面的最低版本
   author: "you",
   description: "…",
   kind: "third-party",    // 官方插件为 "official"；宿主加载时会按来源强制归一
@@ -311,11 +313,11 @@ ctx.registerKaraokeProvider({
 
 三套机制，粒度从细到粗：
 
-| 机制 | 能力 | 用户切换入口 |
-|---|---|---|
-| `registerTheme` | 只覆盖 `--bg / --card / --acc` 那十来个变量 | 设置 → **外观** → Sparkle 主题 |
-| `registerStyleLayer` | 注入**任意 CSS**，常驻生效（不参与选择） | 无（随插件启停） |
-| `registerThemePack` | 多套完整风格，用户挑一套 | 设置 → **Sparkle** → 主题 → 「主题风格」 |
+| 机制                   | 能力                                 | 用户切换入口                         |
+| -------------------- | ---------------------------------- | ------------------------------ |
+| `registerTheme`      | 只覆盖 `--bg / --card / --acc` 那十来个变量 | 设置 → **外观** → 花火面具             |
+| `registerStyleLayer` | 注入**任意 CSS**，常驻生效（不参与选择）           | 无（随插件启停）                       |
+| `registerThemePack`  | 多套完整风格，用户挑一套                       | 设置 → **Sparkle** → 主题 → 「主题风格」 |
 
 后两个是后加的扩展点，为的是解决一个实测问题：宿主样式表里有 405 处 `var()` 引用，但同时有 182 个色值字面量、73 处 `border-radius`、28 处 `box-shadow`——**硬编码**。想做 Material Design 3 / 毛玻璃 / 极简大字这种「圆角体系、阴影层级、组件形态全换一遍」的主题，变量组远远不够，必须能注入任意 CSS。
 
