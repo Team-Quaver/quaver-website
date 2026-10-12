@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "updated": "2026-10-10T10:25:08.623Z",
+  "updated": "2026-10-12T14:59:41.472Z",
   "plugins": [
     {
       "id": "aurora",
       "name": "Aurora 夜辉",
       "version": "1.0.0",
       "author": "Team Quaver",
-      "description": "极光色调的 Sparkle 主题：深蓝夜空底 + 极光绿强调色（Marketplace 流水线示例插件）",
+      "description": "极光色调的花火面具：深蓝夜空底 + 极光绿强调色（Marketplace 流水线示例插件）",
       "category": "theme",
       "download": "https://quaver.0w0.red/sparkle/plugins/aurora.js",
       "homepage": "https://github.com/Team-Quaver/quaver-sparkle",
