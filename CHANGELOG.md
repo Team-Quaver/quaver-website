@@ -1,5 +1,36 @@
 # 更新日志
 
+
+## v1.4.7
+
+- 该版本修复了微信登录因后端使用浮点处理用户 ID，导致用户 ID 乱序获取到其他人的歌单等完全无法正常使用的 Bug [#22](https://github.com/Team-Quaver/quaver-music/issues/22)
+
+## v1.4.6
+- 由于系统包自动更新的这个逻辑在实际使用会很傻逼，故修改机制，可打开文件管理器/打开默认应用，默认更新包下载位置（除 AppImage），为用户下载目录
+
+## v1.4.5
+
+- 支持了两个新的环境变量
+  - QUAVER_CROTCHET 该环境变量系调试模式，值需要是端口号，启动后可以无弹窗安装插件，在 Chrome 中进行调试
+  - QUAVER_REDFLAG 该环境变量为安全模式，当值为非零时，除内置插件外，其他插件全部禁用且无法安装任何插件
+- 该版本上线了 Deb、RPM 包的支持
+- 移除了对 AppImage 管理器更新 AppImage 包导致 AppImage 版本死锁的问题
+- 支持通过 XDG-Open 打开 Discover/GNOME Software 完成更新
+- 该版本开始，将会尽力为星火 APM 和玲珑应用商店适配
+
+
+## v1.4.1 - 1.4.4
+
+### UI 修复
+- 修复了 Quaver Design 的吸顶问题（v1.4.1）
+- 修复了 UI 问题，该问题会导致搜索候选框会被吸顶界面覆盖（v1.4.3）
+- 修复 UI 的一些异常阴影，并对 Flowscope 和 Lumen 插件做了一点修复（v1.4.4）
+
+
+### 后端修复
+- 修复了会员等级获取和 QQ 无法登陆的问题（v1.4.2）
+
+
 ## v1.4.0 Aemeath
 
 欢迎来到 Quaver Music v1.4.0 Aemeath，这是 Quaver Music 百变的开始，也是持续进化的开始。

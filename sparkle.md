@@ -40,4 +40,4 @@ Marketplace 的索引源固定为 `https://quaver.0w0.red/marketplace.json`（�
 
 ## 想写一个插件？
 
-见开发文档：[插件（Sparkle）开发](/sparkle-dev)。
+见开发文档：[插件（Sparkle）开发](/dev/sparkle)。

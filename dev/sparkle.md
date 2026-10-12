@@ -1,4 +1,4 @@
-# 花火插件开发
+# 花火插件（Sparkle）开发指南
 
 花火插件是 Quaver Music 的插件系统。插件是一个实现 `SparklePlugin` 的对象：在 `setup(ctx)` 里通过 `SparkleContext` 注册扩展点（路由 / 侧栏 / 设置页 / 主题与主题包 / 全站样式层 / 正在播放页 / 右键菜单 / 播放源 / 逐字歌词），返回的函数（可选）作为 dispose，在插件停用时调用。
 

@@ -1,3 +1,8 @@
+
+<p align="center">
+  <img src="/imgs/quaver-astra.svg" width="96">
+</p>
+
 # Quaver Music Astra
 
 现代，流畅的 Quaver Music，现已轻装上阵
@@ -14,3 +19,36 @@ Astra 对比 Quaver Music 而言差别在于不会实现 Sparkle 插件系统，
 - 同样支持 QRC 解码和 Karaoke
 - 同样实现系统集成
 - 同样跟进基础体验特性，而部分高阶特性仅 Electron 版本支持
+
+
+<p align="center">
+  <img src="/imgs/astra.png" width="864">
+</p>
+
+## 架构图
+
+```
+             Quaver Music Astra
+                      |
+          +-----------+-----------+
+          |           |           |
+          v           v           v
+      +-------+  +----------+  +--------+
+      | MyGo  |  | Player   |  | Config |
+      | 原生UI |  | 播放状态  |  | Vault  |
+      +-------+  +----+-----+  +--------+
+                      |
+             +--------+--------+
+             |                 |
+             v                 v
+      +-------------+    +-------------+
+      | Typhoeus-Go |    |     mpv     |
+      | 内嵌 HTTP API|    | 音频播放引擎 |
+      +------+------+    +-------------+
+             |                 ^
+             v                 |
+      +-------------+     JSON IPC
+      | QQ Music API|
+      |    / CDN    |
+      +-------------+
+```
