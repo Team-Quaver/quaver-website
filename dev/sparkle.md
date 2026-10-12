@@ -58,6 +58,8 @@ export default definePlugin({
 });
 ```
 
+> **版本门禁**：`minHostVersion` 按 SemVer 比较，当前宿主低于它时**拒绝安装**；`allowBeta: true` 额外放行「同一 `x.y.z` 的预发布宿主」（不能让更旧的 Beta 越过最低版本，缺省 false）。`nightly` 构建（main 末端，版本号沿用上一次发布号）一律视为**高于一切最低版本**——面向未发布版本写的插件在 nightly 上可直接加载。
+
 现成示例按难度排：
 
 - `plugins/die-for-you/index.ts` — `registerSettingsSection` 的最小集成与 dispose 写法；
@@ -83,7 +85,7 @@ export default definePlugin({
 | `registerView` | 内容区路由 | 删除路由；若正停在该页则跳回首页 |
 | `registerNav` | 侧栏导航项（追加在内置项后） | 移除 DOM |
 | `registerSonglistGroup` | 侧栏歌单分组（`items()` 每次重画取最新） | 移除分组并重画侧栏 |
-| `registerSettingsSection` | 设置页 Sparkle 面板的设置分组 | 随面板销毁 |
+| `registerSettingsSection` | 设置页「花火插件」面板的设置分组 | 随面板销毁 |
 | `registerTheme` | 变量级自定义主题 | 删 style；若正激活该主题则回落默认；高亮色 / 背景 / 菜单外观策略同步重算 |
 | `registerStyleLayer` | 全站样式层（任意 CSS） | 摘掉这张 `<style>` |
 | `registerThemePack` | 可切换的主题包（一套完整风格） | 停用插件即摘除；若正选中该包则自动回落默认外观 |
@@ -134,7 +136,7 @@ ctx.registerSonglistGroup({
 
 ### registerSettingsSection(section)
 
-设置页 **Sparkle 面板**里的一个设置分组（用户从插件行的齿轮按钮打开）。`render(box)` 往容器里填 DOM，返回的清理函数在面板销毁（切路由/关弹窗）或插件停用时调用：
+设置页**「花火插件」面板**里的一个设置分组（用户从插件行的齿轮按钮打开）。`render(box)` 往容器里填 DOM，返回的清理函数在面板销毁（切路由/关弹窗）或插件停用时调用：
 
 ```ts
 ctx.registerSettingsSection({
@@ -275,9 +277,9 @@ const off = ctx.player.on(() => { /* 约 4Hz + 播放态等状态变化即发 */
 ctx.registerKaraokeProvider({
   // ① 解析：player 拉到原始歌词后先问 provider。
   //    content 为原始歌词文本（可能是 QRC XML 信封 / 纯文本 QRC / TTML / LRC…），
-  //    translation 为翻译歌词（普通 LRC）文本。
+  //    translation 为翻译歌词（普通 LRC）文本，romanization 为音译歌词文本（可能缺省/空串）。
   //    返回 null（或空行表）= 放弃，宿主回退普通 LRC 行级歌词。
-  parse(content, translation): SparkleKaraokeLine[] | null,
+  parse(content, translation, romanization): SparkleKaraokeLine[] | null,
 
   // ② 渲染：正在播放页的逐字歌词容器整体交给 provider（容器尺寸随宿主布局变化）。
   //    返回的清理函数在换曲/停用时调用。
@@ -289,7 +291,7 @@ ctx.registerKaraokeProvider({
 });
 ```
 
-行结构 `SparkleKaraokeLine` 与 `@applemusic-like-lyrics/core` 的 `LyricLine` 兼容：`words: {word, startTime, endTime}[]`（毫秒时间轴）、`startTime`/`endTime`、可选 `translatedLyric`（宿主「翻译」开关关闭时由渲染方自行剔除）、`isBG`（背景人声）、`isDuet`（对唱行靠右）。停用插件即宿主移除 provider，正在播放页自动回退行级歌词；多个 provider 先注册先得。
+行结构 `SparkleKaraokeLine` 与 `@applemusic-like-lyrics/core` 的 `LyricLine` 兼容：`words: {word, startTime, endTime}[]`（毫秒时间轴；单词可带 `romanWord` 音译与 `ruby` 注音片段）、`startTime`/`endTime`、可选 `translatedLyric`（翻译）与 `romanLyric`（行级音译）——宿主对应的辅助行开关关闭时由渲染方自行剔除、`isBG`（背景人声）、`isDuet`（对唱行靠右）。停用插件即宿主移除 provider，正在播放页自动回退行级歌词；多个 provider 先注册先得。
 
 `render` 拿到的 `ctx` 是宿主实时状态的**只读闭包**（每次调用读到的都是当前态）：
 
@@ -299,6 +301,7 @@ ctx.registerKaraokeProvider({
 | `paused()` | 是否暂停 |
 | `expanded()` | 正在播放页是否展开；收起时应冻结渲染循环省资源 |
 | `showTrans()` | 「翻译」开关当前状态 |
+| `lyricAux()` | 歌词辅助行模式：`off`（关闭）/ `translation`（翻译）/ `romanization`（音译，与翻译替换，无音译数据时回落翻译） |
 | `seek(ms)` | 跳转到指定位置 |
 | `onNotify(cb)` | 订阅宿主通知（约 4Hz + 播放态/展开收起等状态变化即发），返回退订函数 |
 
@@ -317,7 +320,7 @@ ctx.registerKaraokeProvider({
 | -------------------- | ---------------------------------- | ------------------------------ |
 | `registerTheme`      | 只覆盖 `--bg / --card / --acc` 那十来个变量 | 设置 → **外观** → 花火面具             |
 | `registerStyleLayer` | 注入**任意 CSS**，常驻生效（不参与选择）           | 无（随插件启停）                       |
-| `registerThemePack`  | 多套完整风格，用户挑一套                       | 设置 → **Sparkle** → 主题 → 「主题风格」 |
+| `registerThemePack`  | 多套完整风格，用户挑一套                       | 设置 → **花火插件** → 主题 → 「主题风格」 |
 
 后两个是后加的扩展点，为的是解决一个实测问题：宿主样式表里有 405 处 `var()` 引用，但同时有 182 个色值字面量、73 处 `border-radius`、28 处 `box-shadow`——**硬编码**。想做 Material Design 3 / 毛玻璃 / 极简大字这种「圆角体系、阴影层级、组件形态全换一遍」的主题，变量组远远不够，必须能注入任意 CSS。
 
@@ -333,9 +336,9 @@ ctx.registerTheme({
 });
 ```
 
-宿主把它注入为 `html[data-sparkle-theme="<id>"]{…}`，特异性高于 `html[data-theme]`，未覆盖的变量自然回落亮/暗底色。激活入口在设置 → **外观** → 「Sparkle 主题」：卡片组列出所有已注册主题（任一插件注册/停用即时增删，无主题时整组隐藏），「默认」卡片即不使用插件主题；激活状态持久化（`quaver.sparkle.theme.v1`），停用正激活主题所属的插件时宿主自动回落默认。注意：
+宿主把它注入为 `html[data-sparkle-theme="<id>"]{…}`，特异性高于 `html[data-theme]`，未覆盖的变量自然回落亮/暗底色。激活入口在设置 → **外观** → 「花火面具」：卡片组列出所有已注册主题（任一插件注册/停用即时增删，无主题时整组隐藏），「默认」卡片即不使用插件主题；激活状态持久化（`quaver.sparkle.theme.v1`），停用正激活主题所属的插件时宿主自动回落默认。注意：
 
-- Sparkle 主题是独立覆盖层，不参与「跟随系统」的明暗切换，也不写进外观（Style）配置——上方外观模式选明暗，Sparkle 主题在其上叠加变量；
+- 花火面具是独立覆盖层，不参与「跟随系统」的明暗切换，也不写进外观（Style）配置——上方外观模式选明暗，花火面具在其上叠加变量；
 - 与主题包不同，它靠选择器 `html[data-sparkle-theme]` 天然失活，不需要显式摘 `<style>`。
 
 #### 高亮色（tint）归谁管 —— `theme.tint`
@@ -486,7 +489,7 @@ ctx.registerThemePack({
 });
 ```
 
-- **第一个 variant 是默认风格**（用户没切过时用它）。用户在 设置 → Sparkle → 主题 的「主题风格」一行里选，「默认外观」即不加载任何插件样式；选中态持久化在 `quaver.sparkle.style.pack.v1` / `.variant.v1`。
+- **第一个 variant 是默认风格**（用户没切过时用它）。用户在 设置 → 花火插件 → 主题 的「主题风格」一行里选，「默认外观」即不加载任何插件样式；选中态持久化在 `quaver.sparkle.style.pack.v1` / `.variant.v1`。
 - `scheme` 声明亮底/暗底，宿主据此写 `html[data-sparkle-scheme]` → `color-scheme`，让滚动条、原生控件、表单元素跟着对（否则会出现「暗底页面 + 亮色滚动条」）。**不声明 = 尊重用户的「跟随系统」，宿主不动它。** 注意 `color-scheme` 只管原生控件，页面背景仍归宿主 `html[data-theme]` 的变量组，别在 `scheme` 上纠缠。
 - **只注入选中的那一张**，切走时整张 `<style>` 摘掉（不留残留声明——这与 `registerTheme` 靠选择器自然失活的做法不同）。
 - 选中包所属插件被**停用/卸载**时自动回落默认外观（静默，不弹 toast）。否则用户会卡在一张已经没人提供的样式上，而设置页列表里已无那个包，无从切走。
@@ -494,14 +497,14 @@ ctx.registerThemePack({
 
 ### 逃生通道与两条自律
 
-第三方样式能改宿主全部 UI——这是**设计意图**（主题就该全站生效），但也意味着一个坏主题能把界面搞得没法用。所以设置页 Sparkle → 主题 底部有**「暂停全部插件样式」总闸**（`quaver.sparkle.style.suspended.v1`）：不经过任何插件，是唯一不依赖插件的退出路径。插件自己提供的 `reset()` 在插件已崩时未必还灵，别指望它兜底。
+第三方样式能改宿主全部 UI——这是**设计意图**（主题就该全站生效），但也意味着一个坏主题能把界面搞得没法用。所以设置页 花火插件 → 主题 底部有**「暂停全部插件样式」总闸**（`quaver.sparkle.style.suspended.v1`）：不经过任何插件，是唯一不依赖插件的退出路径。插件自己提供的 `reset()` 在插件已崩时未必还灵，别指望它兜底。
 
 给插件作者的两条自律（宿主不审查，但这两条是社区约定）：
 
 1. 别用 `position: fixed` 自绘层盖住右上角窗口按钮簇（`.winbtns`，z-index 90）。
 2. 别把 `--font-default` 之外的字体族写死到 `body` 级别——用户在 设置 → 外观 选的界面/歌词字体会被你的 `body { font-family: … }` 顶掉。
 
-> 顺带一提：变量级主题（`registerTheme`）在 设置 → **外观** 里切，主题包（`registerThemePack`）在 设置 → **Sparkle → 主题** 里切。两处别搞混——Sparkle 面板的「主题」标签只管启停提供它的插件，不管变量级主题的选择。
+> 顺带一提：变量级主题（`registerTheme`）在 设置 → **外观** 里切，主题包（`registerThemePack`）在 设置 → **花火插件 → 主题** 里切。两处别搞混——「花火插件」面板的「主题」标签只管启停提供它的插件，不管变量级主题的选择。
 
 ## 整页接管正在播放页
 
@@ -529,7 +532,7 @@ ctx.registerNowPlayingView({
 | 页面 | `expanded()` / `gallery()` / `collapse()` |
 | 曲目 | `current()` / `prevSong()` / `nextSong()` / `songAt(offset)` / `queueLength()` |
 | 传输（只读） | `time()` / `duration()` / `paused()` / `loading()` / `error()` |
-| 歌词（只读） | `lyrics()` / `lyricState()` / `showTrans()` / `karaoke()` / `karaokeActive()` |
+| 歌词（只读） | `lyrics()` / `lyricState()` / `showTrans()` / `lyricAux()` / `karaoke()` / `karaokeActive()` |
 | 音量（只读） | `volume()` / `muted()` |
 | 音质（只读） | `quality()` / `qualityLabel()` / `lastStream()` / `qualityTiers()` |
 | 控制 | `toggle()` / `seek(sec)` / `next()` / `prev()` / `jumpTo(offset)` / `setVolume(v)` / `toggleMute()` / `switchQuality(id)` / `toggleTrans()` / `loved(mid)` / `toggleLove()` |
@@ -557,7 +560,7 @@ ctx.registerNowPlayingView({
 
 ```
 <configDir()>/plugins/<plugin-id>/
-├── plugin.json   # { id, name, version, author?, description?, main: "main.js" }
+├── plugin.json   # { id, name, version, minHostVersion?, allowBeta?, author?, description?, category?, main: "main.js" }
 └── main.js       # ESM：export default <SparklePlugin>（具名导出 plugin 也被接受）
 ```
 
@@ -573,7 +576,7 @@ ctx.registerNowPlayingView({
 
 1. 开发机设 `QUAVER_SPARKLE_DIR=/path/to/my-plugins`（主进程与 dev relay 同读；优先于配置目录）。
 2. 目录里放 `my-plugin/main.js` 与 `plugin.json`。
-3. 打开设置页 Sparkle tab：列表出现该插件 → 启用。
+3. 打开设置页「花火插件」标签：列表出现该插件 → 启用。
 4. 改完 `main.js` 后「卸载 → 重装」或直接重启应用：插件文件 URL 以安装时间戳为 `?v=` 缓存破坏键，不重装拿到的还是旧代码。
 
 Marketplace 面板在浏览器 dev（无 `window.quaverSparkle` 桥）下不可用，本地目录调试不受影响。
@@ -584,7 +587,7 @@ Marketplace 标签里的红色渐变「添加本地插件」按钮面向**最终
 
 ## 设置页面板结构（v2）
 
-Sparkle 面板分**四个相互隔离的标签**：
+「花火插件」面板分**四个相互隔离的标签**：
 
 | 标签 | 内容 |
 |---|---|
@@ -597,7 +600,7 @@ Sparkle 面板分**四个相互隔离的标签**：
 
 - **插件设置不常驻页面**：行内齿轮就地把该插件注册的 `SparkleSettingsSection` 渲染进弹窗（`components/PluginSettingsDialog.ts`，层与开闭动画复用 `.upd-*`），关闭时统一跑清理函数。
 - **category 随安装持久化**：安装时索引的 `category` 写进 `plugin.json`（主进程 `sparkleInstall`），已装列表据此归入 主题/插件/扩展；本地手装没有 category，一律归入「插件」。
-- **变量级主题的切换不在这里**：`registerTheme` 的激活入口在 设置 → 外观 → Sparkle 主题，面板「主题」标签只管启停插件。
+- **变量级主题的切换不在这里**：`registerTheme` 的激活入口在 设置 → 外观 → 花火面具，面板「主题」标签只管启停插件。
 
 ## Marketplace
 
@@ -614,6 +617,8 @@ Marketplace 是一个**静态 JSON 索引** + 主进程代下载的最小分发�
       "id": "die-for-you",
       "name": "Die For You 歌词",
       "version": "1.0.0",
+      "minHostVersion": "1.4.0",
+      "allowBeta": true,
       "author": "quaver",
       "description": "设置页随机展示《Die For You》歌词",
       "category": "plugin",
@@ -627,6 +632,7 @@ Marketplace 是一个**静态 JSON 索引** + 主进程代下载的最小分发�
 
 - `download` 必须直指**单文件 ESM .js**（default export 插件对象），v1 不做 zip 分发。
 - `hash` 存在时主进程下载后校验 sha256，不匹配拒绝落盘。
+- `minHostVersion` 可选，插件要求的最低宿主版本（SemVer）；当前宿主低于它时拒绝安装。`allowBeta` 可选布尔（缺省 `false`），为 `true` 时额外放行「同一 `x.y.z` 的 Beta 宿主」；`nightly` 构建一律视为满足最低版本。
 - `category` 是设置页分类（`theme` / `plugin` / `extension`），缺省或未知值按 `plugin` 归档。
 - 索引源固定为 `market/default-index.ts` 的 `DEFAULT_MARKET_URL`（`https://quaver.0w0.red/marketplace.json`），设置页只读展示 + 刷新，不可更改（早期版本的 `quaver.sparkle.market.url.v1` 覆盖已废弃）。
 - 安装成功后默认关闭，需在「插件」分类里手动启用；支持卸载与重新安装（重新安装即更新到最新发布版）。
@@ -637,6 +643,13 @@ Marketplace 是一个**静态 JSON 索引** + 主进程代下载的最小分发�
 第三方插件在渲染层运行**任意 JS**。壳层 `contextIsolation` 开启、`nodeIntegration` 关闭，插件只能触达宿主暴露的桥（`window.quaverSparkle`）与页面能力；索引里的 `hash` 只防运输损坏，**不构成签名校验**。给用户的提示只有一句：只安装信任来源。
 
 样式层同理——第三方 CSS 能改写宿主全部 UI，宿主无法审查，只能提示信任来源；用户的兜底是「暂停全部插件样式」总闸。
+
+### 安全模式与黑名单
+
+上面都是「信任 + 自律」，宿主另外留了两个**用户侧**硬开关，收敛到同一个判定（`ui/src/sparkle/policy.ts` 的 `sparkBlockReason`）：**启动路径**（`init.ts` 逐个 enable）与**运行期手动开关**（`host.ts` 的 `enableSparklePlugin`，设置页点启用）查的是同一份——只在启动时拦、设置页却还能手动打开的「安全模式」是假的。被拦的插件在 `setup` 之前就返回，**一行代码都不执行**。
+
+- **安全模式（干净载入）**：主进程按 `QUAVER_REDFLAG=1` 进入，经 preload 下发（浏览器 dev / 未开恒为 false）。只放行随宿主打包的**预装**插件；第三方插件**连磁盘列表都不读、代码一行不 import**，坏插件也就没机会把启动搞黄。此模式下第三方插件的手动启用开关一并上锁，**安装入口也锁死**（主进程直接拒绝 `install` / `install-local`）；设置页「花火插件」面板顶部显示一条提示。
+- **黑名单**：`quaver.conf` 的 `[Sparkle] Blacklist`（逗号分隔的插件 id，如 `flowscape,die-for-you`，只认 kebab-case id）可拉黑任意插件，**预装与第三方一视同仁**，安全模式下同样生效。命中的插件行在设置页显示锁态。
 
 ## 宿主侧实现
 
@@ -650,9 +663,9 @@ Marketplace 是一个**静态 JSON 索引** + 主进程代下载的最小分发�
 | `init.ts` | 启动：播种官方默认启用 → 逐个 enable（官方 → 第三方），不阻塞首帧 |
 | `style-layer.ts` | 全站样式层与主题包的注入管理：层序重排（order 升序、同序按登记序，全摘重挂）、`color-scheme` 协调、孤儿包回落、总闸 suspended |
 | `np-view.ts` | 整页接管视图：`SparkleNpViewCtx` 工厂（只读闭包 + 写侧转发到 player）、音质档位表缓存、按 `enabled()` 维护挂载/卸载 |
-| `settings.ts` | 设置页 Sparkle 面板：主题/插件/扩展/Marketplace 四标签（已装管理 + 主题风格选择 + 总闸 + 固定索引源 + 添加本地插件），插件设置经行内齿轮弹窗（PluginSettingsDialog） |
+| `settings.ts` | 设置页「花火插件」面板：主题/插件/扩展/Marketplace 四标签（已装管理 + 主题风格选择 + 总闸 + 固定索引源 + 添加本地插件），插件设置经行内齿轮弹窗（PluginSettingsDialog） |
 
-宿主消费点：`shell.ts`（路由回落 `views[path] ?? sparkleViewAt(path) ?? views["/"]`、侧栏 nav 与歌单分组）、`player.ts`（播放源链、逐字解析）、`NowPlaying.ts`（逐字渲染、部件插槽、接管态下的 `body.np-takeover`）、`SongMenu.ts`（菜单项、toast）、`views.ts`（Sparkle 设置 tab、外观面板的 Sparkle 主题切换）。
+宿主消费点：`shell.ts`（路由回落 `views[path] ?? sparkleViewAt(path) ?? views["/"]`、侧栏 nav 与歌单分组）、`player.ts`（播放源链、逐字解析）、`NowPlaying.ts`（逐字渲染、部件插槽、接管态下的 `body.np-takeover`）、`SongMenu.ts`（菜单项、toast）、`views.ts`（花火插件 tab、外观面板的花火面具切换）。
 
 守护与变更流程：
 
@@ -667,7 +680,8 @@ Marketplace 是一个**静态 JSON 索引** + 主进程代下载的最小分发�
 | `quaver.sparkle.enabled.v1` | 启用集合（string[]） |
 | `quaver.sparkle.official-known.v1` | 见过的官方插件 id（播种默认启用用） |
 | `quaver.sparkle.official-off.v1` | 被用户显式停用过的官方插件 id |
-| `quaver.sparkle.theme.v1` | 激活中的变量级 Sparkle 主题 id（`registerTheme`） |
+| `quaver.sparkle.theme.v1` | 激活中的变量级花火面具（主题）id（`registerTheme`） |
+| `quaver.sparkle.tint.v1` | 各花火面具下用户选过的高亮方案（tint preset）id 选择表 `{ [themeId]: presetId }`（`registerTheme` 的 `theme.tint.mode: "presets"`） |
 | `quaver.sparkle.style.pack.v1` | 激活中的主题包 id（`registerThemePack`） |
 | `quaver.sparkle.style.variant.v1` | 激活中的主题风格（variant）id |
 | `quaver.sparkle.style.suspended.v1` | 「暂停全部插件样式」总闸（存在 = 拉下） |
