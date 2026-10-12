@@ -67,11 +67,14 @@ Quaver Music 基于 Electron + Vite，并辅以 Sparkle 插件和 Golang MPV 播
 
 基于花火插件系统（Sparkle），拥有主题、插件、扩展三个类别，只为打造属于你的 Quaver Music。
 
+<p align="center">
+  <img src="/imgs/md.png" width="480">
+</p>
 
 
 ## 社区为本
 
-基于 AGPLv3 协议开源
+基于 AGPLv3 Only 协议开源，最大程度保证该软件的可持续性与维护性，支持 LLM 贡献（人参与审核）。
 
 ## 兼容之道
 
