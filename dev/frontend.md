@@ -54,6 +54,7 @@
 | `/guess` | `guessView` | 猜你喜欢 |
 | `/daily` | `dailyView` | 每日 30 首 |
 | `/liked` | `likedView` | 我喜欢 |
+| `/local` | `localView` | 本地音乐（本地/NAS 曲库：源管理 · 扫描 · 自动刮削 · 曲目表） |
 | `/playlist` | `playlistView` | 歌单详情 |
 | `/singer` | `singerView` | 歌手主页 |
 | `/singer-albums` | `singerAlbumsView` | 歌手全部专辑 |
@@ -63,6 +64,7 @@
 | `/user` | `userView` | 用户页 |
 | `/login` | `loginView` | 登录 |
 
+- 侧栏导航 `shell.ts` 的 `nav`：首页 `/`、猜你喜欢 `/guess`、每日 30 首 `/daily`、我喜欢 `/liked`、**本地音乐 `/local`**（图标 `folder`）。
 - 页面脚本**第一行必须** `mountLayout("标题")`（注入顶栏/侧栏/播放条并搬运 `.page` 内容），之后才能查询页面 DOM。
 - 跨页导航一律用 **`.html` 后缀的绝对路径**（壳层直接加载 dist 文件时只有 `.html` 形式可用）。
 - 常量：搜索页 `SEARCH_TABS`（歌曲/歌手/专辑/歌单，`type` = 0/1/2/3）；歌手页 `SINGER_TABS`（热歌/新歌/专辑，key = hot/new/album）；用户页 `ME_OUT_MS = 180`（退出动画时长，与 `.me.leaving` 对齐）。
@@ -118,12 +120,13 @@
 | `ambient.ts` | 环境色层（`.ambient`）DOM 应用 |
 | `tint.ts` | 界面高亮色（写 `--cvg-*` 五个变量） |
 | `menu-glass.ts` | 浮层菜单毛玻璃（写 `<html data-menu-glass>`） |
-| `color.ts` | 颜色数学：`parseHex`/`toHex`/`rgb2hsl`/`hsl2rgb`/`rgb2cmyk`/`cmyk2rgb`、封面取色 |
+| `color.ts` | 颜色数学：`parseHex`/`toHex`/`rgb2hsl`/`hsl2rgb`/`rgb2cmyk`/`cmyk2rgb`、封面取色（`extractCoverColor` + `toPixelSrc`：跨源 http(s) 过 `/api/img` 白名单中继，同源相对路径（本地封面）与 data: 直连） |
 | `hotkeys.ts` | 焦点内热键 + 全局热键回程 |
 | `inhibit.ts` | 播放时防睡眠 |
 | `session.ts` | 播放会话存档（queue/进度/模式） |
 | `playlists.ts` / `favs.ts` / `songlist-detail.ts` | 歌单/收藏数据层与写回 |
 | `songs.ts` | 歌曲行渲染与 `loadLiked` 等 |
+| `local.ts` | 本地/NAS 曲库渲染侧数据层：`/api/local/*` 客户端、库快照 + 进度轮询、`trackToSong`（Song.local 指纹）、扫描/刮削/导入/编辑动作 |
 | `songtiers.ts` | 单曲音质档位存在性判定（纯逻辑） |
 | `shuffle.ts` | 伪随机洗牌（FNV-1a hash 序列） |
 | `reorder.ts` | 队列拖拽重排几何计算 |
@@ -135,7 +138,7 @@
 
 ### 2.3 `ui/src/components/`
 
-`HotkeySettings`、`ListTools`、`LocalPluginDialog`、`NowPlaying`、`PlayerBar`、`PlaylistMenu`、`PluginSettingsDialog`、`QueuePanel`、`SearchBox`、`SongMenu`、`UpdateDialog`。
+`HotkeySettings`、`ListTools`、`LocalImportDialog`（本地曲「重新设置刮削信息」模态）、`LocalPluginDialog`、`NowPlaying`、`PlayerBar`、`PlaylistMenu`、`PluginSettingsDialog`、`QueuePanel`、`SearchBox`、`SongMenu`、`UpdateDialog`。
 
 ## 3. 配置系统 quaver.conf（全量 SCHEMA）
 
@@ -163,6 +166,8 @@
 | `CREDENTIAL_STORE_NAME` | `"credential.enc"` | 密钥环模式：磁盘只留密文 |
 | `DEVICE_NAME` | `"device.json"` | 设备指纹（非密钥，明文） |
 | 日志 | `electron-dev.log` | 同目录 |
+| `local-library/library.json` | 本地曲库索引（0600；含 WebDAV 口令，**任何响应不得回显 password**） | 见 §9.3 |
+| `local-library/covers/`、`local-library/lyrics/` | 本地曲库的封面副本（内嵌抽取 / QQ 下载 / 手动导入）与歌词件（`.txt` 内嵌、`.json` 在线缓存、`.import` 手动导入） | 见 §9.3 |
 
 **写入策略**：读文件保留原始行（注释、顺序、用户自加键都不动），`set` 只改对应键那一行；键不存在则追加。落盘走「同目录临时文件 + rename」原子替换，**文件权限 0600、目录 0700**。
 
@@ -548,7 +553,7 @@
 | `quaver.loved.v1` | 「我喜欢」本地集合 | `player.ts` |
 | `quaver.loved.writes.v1` | 收藏写回队列 | `player.ts` |
 | `quaver.search.history.v1` | 搜索历史（上限 10） | `SearchBox.ts` |
-| `quaver.session.v1` | 播放会话存档（队列上限 500） | `lib/session.ts` |
+| `quaver.session.v1` | 播放会话存档（队列上限 500）；本地曲队列携带 `local` 指纹（`{id,kind,hasCover,path,sourceName,qqMid,lyricImport}`，`slim` 原样透传） | `lib/session.ts` |
 | `quaver.songlist.writes.v1` | 歌单增量写回队列 | `lib/songlist-detail.ts` |
 | `quaver.sparkle.enabled.v1` | 已启用插件 id | `sparkle/host.ts` |
 | `quaver.sparkle.official-known.v1` | 已识别的官方插件 id | `sparkle/host.ts` |
@@ -576,6 +581,7 @@
 | `quaver:flush-session` | — | 会话落盘 |
 | `quaver:fullscreen-state` | event | 全屏状态 |
 | `quaver:hotkey` / `quaver:hotkeys-info` | event / invoke | 全局热键回程 / 信息 |
+| `quaver:local` | invoke | 本地曲库：`pick-folder`（原生选目录）/ `reveal`（**只收曲目 id**，主进程现读库反查路径再 `shell.showItemInFolder`） |
 | `quaver:mpris` / `quaver:mpris-cmd` | — | MPRIS 状态 / 命令回程 |
 | `quaver:quit` | — | 退出 |
 | `quaver:sparkle` | invoke | 插件安装/卸载/市场/本地 |
@@ -594,6 +600,7 @@
 | `window.quaverConfig` | `boot`/`all`/`set`/`reset`/`reveal` |
 | `window.quaverSecurity` | 安全/凭证信息 |
 | `window.quaverBackground` | `pick()` / `info()` |
+| `window.quaverLocal` | `pickFolder()` / `reveal(id)`；音频/封面/歌词本体走同源 `/api/local/*`，不经这里 |
 | `window.quaverSparkle` | `list`/`install`/`uninstall`/`market`/`pickLocal`/`installLocal` |
 | `window.quaverUpdate` | `invoke(msg)` / `onProgress(cb)` |
 | `window.quaverAudio` | 音频引擎控制（浏览器 dev 下不存在 → 回落 `<audio>`） |
@@ -614,6 +621,7 @@
 | `/api/bg` | 背景图（`backgroundResponse()`，路径来自配置 + 扩展名白名单 + 40MB 上限） |
 | `/api/accent` | 系统强调色（`accentPayload()`） |
 | `/api/sparkle/plugin/<id>/<file>` | 插件静态文件（`SPARKLE_ID_RE` + 目录逃逸防护） |
+| `/api/local/*` | 本地/NAS 曲库（`electron/local/library.ts:handleLocalApi`；dev=relay.ts、打包=native-server.ts **两处同构挂载**，且必须早于 sidecar 兜底转发。全量表见 §9.3） |
 
 ### 9.2 透传端点
 
@@ -624,6 +632,29 @@
 歌曲/歌单/专辑/歌手：`/song/like`、`/song/unlike`、`/song/{mid}/lyric`、`/songlist/{id}/detail`、`/songlist/{id}/songs`、`/songlist/{id}/like`、`/album/{mid}/detail`、`/album/{mid}/songs`、`/singer/{mid}/info`、`/singer/{mid}/desc`、`/singer/{mid}/songs`、`/singer/{mid}/albums`。
 
 流：`/stream/resolve`、`/stream/tiers`、`/stream/{token}`、`/inhibit`。
+
+### 9.3 本地曲库端点（`/api/local/*`，`feat/herta/local-nas-track` 新增）
+
+读盘/扫描/刮削/流服务真相在 `electron/local/library.ts`（零 electron、纯 Node；标签解析在 `electron/local/tags.ts`，WebDAV 客户端在 `electron/local/webdav.ts`）。信封与 §9 一致。**曲目 id** = `t_` + sha1(sourceId\u0000relPath) 前 12 hex；**源 id** = `s_` + 8 hex。所有 GET/POST 只认 id，路径只从库文件来。
+
+| 方法与路径 | 入参 | 行为 |
+| --- | --- | --- |
+| `GET library` | — | `{sources(剔除 password + trackCount), tracks[], stats{tracks,matched,withCover,withLyric}, scan, scrape}` |
+| `GET track/<id>` | — | 单曲记录（会话恢复/右键刷新用） |
+| `POST source/add` | `{kind:"folder"\|"webdav", name, path?\|url?, username?, password?}` | folder 验目录存在；webdav 先 PROPFIND 探测（连不通 = 502 拒存） |
+| `POST source/remove` | `{id}` | 连带清出该源曲目与封面/歌词缓存（磁盘文件不动） |
+| `POST scan` / `GET scan` | — | 后台扫描（单飞）/ 进度 `{running,processed,found,kept,removed,errors[],lastError}` |
+| `POST scrape` / `GET scrape` | `{ids?,all?,force?}` | 在线刮削队列（单飞、串行 +250ms 限速）/ 进度 `{running,total,processed,matched,unmatched,failed}` |
+| `GET\|HEAD stream/<id>` | `Range` | folder=createReadStream+206/416；webdav=上游 Range 代理（上游无视 Range 回全量时本地掐头去尾） |
+| `GET\|HEAD cover/<id>` | — | 封面副本字节（**no-store**：同 id 原地换图 URL 恒定） |
+| `GET lyric/<id>` | — | `{lyric,trans,roma,source,format}`；优先级 **手动 import > sidecar .lrc > 在线刮削缓存(qq) > 内嵌(embed)** |
+| `POST lyric/import` | `{id,name,data(base64)}` | ≤512KB；`sniffLyricFormat` 按内容嗅 lrc/qrc/ttml；导入恒胜（重扫不冲掉） |
+| `DELETE lyric/import/<id>` | — | 撤销导入，按现存资产回退一档 |
+| `POST cover/import` | `{id,name,data(base64)}` | ≤8MB；`imageFormat` 魔数验 jpg/png/gif/webp；`coverManual=true` |
+| `POST meta/set` | `{id,title?,artist?,album?}` | 校正刮削用曲名/歌手/专辑（至少填一项），置 `editedMeta`，展示与在线搜索都吃这份 |
+| `GET status` | — | 轻查询 `{configured,...stats,scanning,scraping}` |
+
+**刮削（scrape）**：`GET /search?keyword=曲名 歌手`（走 `QUAVER_API` sidecar）→ 打分（歌名吻合是硬门槛，宁缺毋滥）→ 命中落 `match{qqMid,singerMid,albumMid,albumPmid,coverQq,lyricQq}` + `lyrics/<id>.json`（trans/roma 同缓存）+ 无内嵌封面时下载 `y.gtimg.cn` 专辑封面。扫描收尾发现新歌（`found>0`）自动补一轮未匹配刮削。**用户校正过（`editedMeta`）的展示字段恒不被回填**；手动导入的歌词/封面恒不被自动来源覆盖。
 
 ## 10. 环境变量全量
 
@@ -736,6 +767,20 @@
 | `PlayerBar` | `LOOP_MODES` | 顺序 `off` / 列表循环 `all` / 单曲循环 `one` |
 
 
+### 11.6 本地曲库 `electron/local/*` + `src/lib/local.ts`
+
+| 模块 | 常量 | 值 |
+| --- | --- | --- |
+| `local/library.ts` | `TAG_WINDOW` / `TAG_WINDOW_BIG` / `ID3_MAX` | `256KB` / `8MB` / `20MB`（标签读窗口与扩窗、ID3v2 尺寸止损） |
+| `local/library.ts` | 目录名 | `local-library`（covers/ lyrics/ library.json） |
+| `local/library.ts` | folder 深度 / webdav 深度 / 文件数错误上限 | `8` / `7` / `50` |
+| `local/library.ts` | 歌词/封面导入上限 | `512KB` / `8MB` |
+| `local/library.ts` | 内嵌封面落盘区间 / QQ 封面下载上限 | `64B..20MB` / `8MB`（JPEG magic 校验） |
+| `local/library.ts` | 刮削节奏 | 每曲 `sleep(250ms)`；单请求 `AbortSignal.timeout(15000)`；每 8 曲落一次盘 |
+| `local/library.ts` | 扫描让出 | folder 每 16 文件、webdav 每 4 文件 `setImmediate`；id 正则 `t_[0-9a-f]{12}` / `s_[0-9a-f]{8}` |
+| `local/tags.ts` | `AUDIO_EXT_SET` | mp3 flac ogg oga opus m4a m4b aac wav aif aiff ape wv mpc dsf dff mp2 |
+| `src/lib/local.ts` | 进度轮询 | `900ms`（scan/scrape 任一在跑时） |
+
 ## 12. 播放器、传输层与音质
 
 - 播放全局对象 `window.QuaverPlayer` 由 `PlayerBar()` 挂载。
@@ -744,6 +789,8 @@
 - **收藏写接口的 songType 陷阱**：读接口 `Song.type` 普通歌曲 = `1`，写接口必须发 `0`（`writeSongType`）；发 1 会「静默成功但什么都没发生」。
 - **睡眠抑制执行端**在 sidecar：Linux = xdg 门户 Suspend 位（门户假成功走 Logind 直连）；Windows = `PowerRequestSystemRequired`；macOS = `IOKit PreventUserIdleSystemSleep`。渲染层经 `lib/inhibit.ts` 驱动。
 - **假音轨**（`fake-audio.ts`）：维持系统媒体会话（SMTC 等），与用户音量完全解耦。
+- **本地/NAS 曲目**（`Song.local` 指纹判 `isLocalSong`）：`mid = "local:" + 库 id`（队列/收藏键位命名空间隔离）；取流 = 同源 `/api/local/stream/<id>`（不过 Sparkle/QQ resolve，档位标 `local`/`nas`，胶囊显「本地文件/NAS 流」）；无档位回退链（流失败=直接跳下一曲）；红心 `toggleLove`、换音质 `switchQuality`、预取 `prefetchSong` 全短路；封面走 `coverUrl` 本地分支（`hasCover=false` 回空串），重导封面经 `api.ts:bumpLocalCover` 带 `?v=` 穿透按-URL 缓存。
+- **本地曲歌词优先级**：官方曲恒走在线 QRC 管线（`pullQqLyric`）；本地曲**未手动导入且刮削命中（`local.qqMid`）时优先复用同一条在线管线**（qrc=1 → 无 provider/解析失败回退行级 LRC），拿不到内容才落 `/local/lyric`（import > sidecar .lrc > qq 缓存 > embed）。库快照落定 `refreshLocalCurrent` **恒 notify**（不按指纹相等早退），qqMid 到手/导入翻转时自动补拉（`fetchLyric` 的 seq 守卫防竞态）。
 
 ## 13. Sparkle 插件系统
 
@@ -850,6 +897,9 @@ export interface SparklePlugin {
 | `linux-desktop.ts` | 桌面文件/图标安装 |
 | `xdg-portal.ts` | XDG 门户 |
 | `audio/*` | 音频引擎：`bins.ts`（mpv 解析）、`engine.ts`、`mpv-ipc.ts`、`mpv-watchdog.ts`、`macho.ts` |
+| `local/library.ts` | 本地曲库核心（零 electron）：索引/扫描/Range 流/在线刮削/`handleLocalApi` 路由/`revealTarget`（§9.3） |
+| `local/tags.ts` | 标签解析纯函数（ID3v2.2/2.3/2.4+USLT/APIC、ID3v1、Vorbis/FLAC/OGG、MP4 ilst/mvhd、WAV/AIFF、Xing/VBRI/CBR 时长、文件名兜底） |
+| `local/webdav.ts` | WebDAV 客户端（PROPFIND Depth:1 + Basic + Range；NAS 挂载目录按 folder 源处理） |
 
 ### 14.1 main.ts 关键常量
 
@@ -941,6 +991,15 @@ JSON 层为**宽松解析**（找键名归一化等于 `primary`/`mPrimary`/`acc
 
 tint / 背景 / 菜单三处的「主题是否接管」判定口径**必须一致**（让位是安全侧：不成形的声明也算主题接管）。激活主题解析只有 `registry.ts:sparkleActiveTheme()` 一份。
 
+### 15.7 本地/NAS 曲库红线
+
+- **路径只从库来**：`stream`/`cover`/`lyric` 只认 `t_<12hex>` id（与 `/api/bg` 同一条「请求参数不参与拼路径」红线）；源路径只在 `source/add` 进来一次；folder 遍历**软链不跟**（环路 + 越界双防）。
+- **id 稳定性**：relPath 永远相对**源根**（嵌套目录不许拍平，否则同名文件撞 id）；重扫按 `size+mtime` 增量。
+- **口令只进不出**：WebDAV password 落 `library.json`（0600），一切响应 `maskSource` 剔除，日志不打印。
+- **手动覆盖恒胜**：导入歌词（`lyricSource=import`）、导入封面（`coverManual`）、元数据校正（`editedMeta`）都必须在重扫/重刮后存活；撤销是唯一降级出口。
+- **tint 取色源**：`toPixelSrc` 只有一个判据 —— 跨源 http(s) 过 `/api/img` 白名单中继，**同源相对路径直连**（被中继 400 拒掉会像「跟丢了封面」）；换封面要 `bumpLocalCover` 改 URL 且 `refreshLocalCurrent` 恒 notify。
+- **MPRIS 封面绝对化**（`mpris.ts:absArt`）：相对 `/api/local/cover` 给外部播放器就是画不出图。
+
 ## 16. 验证脚本与构建
 
 ### 16.1 常用命令
@@ -954,13 +1013,14 @@ tint / 背景 / 菜单三处的「主题是否接管」判定口径**必须一�
 | `pnpm run preview` | 预览构建产物 |
 | `pnpm run app` | 构建 + 启动 Electron |
 | `pnpm run dist` | 构建 + MPRIS + electron-builder（Linux AppImage） |
-| `pnpm run verify:static` | 一次性跑全部静态验证脚本（约 30 个） |
+| `pnpm run verify:local` | 本地曲库护栏（纯单测 + 真 HTTP e2e：假 sidecar + 假 WebDAV + Range/导入/刮削/清库） |
+| `pnpm run verify:static` | 一次性跑全部静态验证脚本（约 30 个；含 verify-local） |
 
 健康检查：`curl -s http://127.0.0.1:5173/index.html | head -5` 应返回 HTML；`curl -s http://127.0.0.1:5173/api/login/status` 验证中继（sidecar 未跑返回 502 JSON 也算中继活着）。
 
 ### 16.2 verify:static 覆盖的脚本
 
-`verify-config`、`verify-prefs-map`、`verify-highlight-contrast`、`verify-song-menu`、`verify-list-tools`、`verify-queue-panel-anim`、`verify-queue-drag`、`verify-noselect`、`verify-user-vip`、`verify-sidebar`、`verify-playlist-menu`、`verify-systheme`、`verify-login`、`verify-keyring`、`verify-daily`、`verify-guess`、`verify-sparkle`、`verify-input-policy`、`verify-streaminfo`、`verify-hotkeys`、`verify-shuffle`、`verify-icon`、`verify-update`、`verify-songtiers`、`verify-mpv`、`verify-tray-title`、`verify-background`、`verify-menu-glass`、`verify-tint`、`verify-accent`、`verify-redflag`。
+`verify-config`、`verify-prefs-map`、`verify-highlight-contrast`、`verify-song-menu`、`verify-list-tools`、`verify-queue-panel-anim`、`verify-queue-drag`、`verify-noselect`、`verify-user-vip`、`verify-sidebar`、`verify-playlist-menu`、`verify-systheme`、`verify-login`、`verify-keyring`、`verify-daily`、`verify-guess`、`verify-sparkle`、`verify-input-policy`、`verify-streaminfo`、`verify-hotkeys`、`verify-shuffle`、`verify-icon`、`verify-update`、`verify-songtiers`、`verify-mpv`、`verify-tray-title`、`verify-background`、`verify-menu-glass`、`verify-tint`、`verify-accent`、`verify-redflag`、`verify-local`（本地/NAS 曲库，105 项）。
 
 另有单项：`verify:np-gallery`、`verify:sparkle-market`、`verify:loved-sync`、`verify:songlist-sync`、`verify:flowscape-lyrics`。
 

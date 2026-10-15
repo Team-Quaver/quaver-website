@@ -43,10 +43,10 @@ APM 包目前测试下来出现性能问题的要求如下：
 
 ## 如意玲珑
 
-目前由于还在逐渐稳定代码的阶段，短时间不会有玲珑版本。
+我们正在努力上线如意玲珑商店！敬请期待！
 
 ## Flatpak
 
 由于 GNOME 基金会旗下 Flathub 目前针对 LLM 开发的应用程序策略过于的夸张，故我们将会尽量自维护 Flatpak 包。
 
-[自维护 Flatpak 仓库](https://github.com/Team-Quaver/quaver-fuck-gnome-and-flathub)
+更新机制将会和 RPM/Debian 包一致，1.6 见！

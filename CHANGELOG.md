@@ -1,5 +1,94 @@
 # 更新日志
 
+## v1.5.0 Herta
+
+
+![Version Img](./images/1-5/quaver.webp)
+
+欢迎来到 Quaver Music v1.5.0 Herta，在这个版本中，我们扩展了 Quaver Music 的功能，并经过多轮对话进行优化，修复。
+
+![full.png](./images/1-5/full.png)
+### 特性
+
+#### 新特性
+
+- 这个版本中，我们支持了本地音乐，WebDAV NAS 的播放支持与刮削
+  - 与此同时，本地音乐支持从本地导入封面/歌词
+  - 在未来，我们将为我喜欢/本地音乐上线以歌手分类/以专辑分类。
+  ![local.png](./images/1-5/local.png)
+#### 歌词
+
+- AMLL 将成为 Quaver Music 内置的歌词渲染工具，不再以插件形式存在
+- 支持了基于 Lyrics-Kit QRC Kana 的注音标记
+	- 可能需要一定版本的修复和优化才能完善
+
+![kana.png](./images/1-5/kana.png)
+
+- 歌词搜索已支持 AMLL 数据库获取
+- 支持了桌面歌词
+	- 该功能支持 TMLL 数据库，QRC，自导入（本地音乐）
+
+![desktop-lrc](./images/1-5/desktop-lrc.png)
+
+- 支持歌词的延迟调节
+![delay](./images/1-5/delay.png)
+
+- 实现了歌词繁体中文/简体中文转换（端侧）
+
+#### 杂项
+
+- NowPlaying：支持了歌词的音译优先/翻译优先功能
+
+![trans.png](./images/1-5/trans.png)
+
+- Sparkle：我们移除了 AMLL 插件，将 AMLL 插件集合在 Quaver Music 里面
+- Base：上线了启动动画
+
+![splash.png](./images/1-5/splash.png)
+
+- UI：为 Quaver Design 实现了悬浮播放控制器
+	- 该功能会为 Sparkle 开放支持
+
+![float.png](./images/1-5/float.png)
+
+### 修复
+
+- UI/DesktopLrc：自 Beta 1 版本发现的变成模态窗口问题现已修复
+	- 该版本调整大小需通过右下角把手
+- UI/Quaver Design：修复了 Quaver Design 下，播放列表被吸顶挡住的问题
+	- 目前还在持续优化，预计在后面的修复包/功能更新带来
+- Performance：自 Beta 1 发现的问题，现将歌词繁体/简体转换切分，并选择 Rolldown 分割
+- UI/Quaver Design：自 Beta 2 发现的问题，修复了 Quaver Design 下，悬浮播放控制条遮挡播放列表和设置的问题
+- UI/Quaver Design：自 Beta 2 发现的问题，修复了 Quaver Design 下，播放本地音乐会有进度条闪烁的回归问题
+### 优化
+
+- PlayControl: 单轮播放现已下线，请使用列表循环模式
+- Performance：优化部分内存占用
+- Performance：将部分页面实现动态加载
+- UI/PlayControl：播放控制条的 like 按钮，现已变成空/实心单色
+- UI/PlayControl：自 Beta 1 发现的问题，桌面歌词按钮现已不参与 tint
+- UI/NowPlaying：我们为暂停/播放的封面实现了”呼吸效果“
+- UI/Search： 搜索页已按照分页实现
+- UI/客户端窗口装饰模式：现已优化正在播放页的的可拖动逻辑，可将鼠标放在右上角空白位置进行拖动
+	- 由于位置冲突的问题，没法让整行 CSD 区甚至整个页面可拖动
+	- 我们正在持续收取 UI 优化意见并加以考量
+
+### 花火插件 SDK
+
+- 现已支持透传本地音乐功能，以修复 Flowscope 的本地播放音质控制器
+- 为正在播放页扩展更多 SDK
+  
+### 官方插件
+
+#### Flowscope 流境
+
+- Flowscope 已为本地播放进行优化
+- Flowscope 已为列表循环模式进行修复
+
+#### Lumen
+
+- Lumen 已跟进新版花火插件 SDK
+
 
 ## v1.4.7
 
@@ -22,6 +111,7 @@
 ## v1.4.1 - 1.4.4
 
 ### UI 修复
+
 - 修复了 Quaver Design 的吸顶问题（v1.4.1）
 - 修复了 UI 问题，该问题会导致搜索候选框会被吸顶界面覆盖（v1.4.3）
 - 修复 UI 的一些异常阴影，并对 Flowscope 和 Lumen 插件做了一点修复（v1.4.4）

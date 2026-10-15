@@ -5,8 +5,7 @@
 > （`internal/conf` / `internal/vault`）、自动更新（`internal/update`）以及发布流水线（`.github/workflows` + `scripts/`）。
 > 目标是「读完就能上手改」。
 >
-> 适用范围：仓库 `github.com/Team-Quaver/quaver-astra`（本地检出 `/home/ne0w0r1d/Desktop/quaver-astra`，`main` 分支，
-> 子模块 `third_party/Typhoeus-go`，内置框架源码 `third_party/mygo`）。
+> 适用范围：仓库 `github.com/Team-Quaver/quaver-astra`，与子模块 Typhoeus-Go、MyGO
 >
 > 一句话架构：**MyGo 原生 / GPU UI（无 WebView）** ＋ **进程内嵌 Typhoeus-go 后端（`127.0.0.1` 随机端口）** ＋
 > **mpv 子进程音频引擎（JSON IPC）** ＋ **三平台系统集成与自动更新**；全 Go、`CGO_ENABLED=0`、六个目标交叉编译。

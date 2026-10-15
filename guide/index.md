@@ -8,6 +8,8 @@
 
 <p align="center">现代、流畅、百变的第三方 QQ 音乐客户端</p>
 
+<p align="center">The Ultimate listening machine</p>
+
 ---
 
 Quaver Music，最早是为了解决 Linux 上 QQ 音乐官方客户端不好用而生。
