@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-10-14T16:16:24.593Z",
+  "updated": "2026-10-16T04:36:17.779Z",
   "plugins": [
     {
       "id": "aurora",
@@ -27,14 +27,14 @@
     {
       "id": "md3",
       "name": "Lumen 流光",
-      "version": "1.3.6",
+      "version": "1.3.7",
       "minHostVersion": "1.4.1",
       "allowBeta": true,
       "author": "Team Quaver",
       "description": "一款复刻 Material You 设计的主题；高亮方案含「系统强调色」（Noctalia / matugen / KDE / GNOME）",
       "category": "theme",
       "download": "https://quaver.0w0.red/sparkle/plugins/md3.js",
-      "hash": "b14f803d6fc8139897f59608dd8e9b095125f21dca84ffbf3463a68da62271bc"
+      "hash": "264312d519047e248ce1dcc689c40eee3d78a54f0740ba0c7aed9dc3483c15f5"
     }
   ]
 }
