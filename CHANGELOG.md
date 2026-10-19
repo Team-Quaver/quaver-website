@@ -1,5 +1,63 @@
 # 更新日志
 
+## v1.6.0 Denia（暂未发布稳定版）
+
+欢迎来到 Quaver Music 1.6.0 Denia！
+
+事物不应一尘不变，在经历了 Herta 版本一阵子后的调整，修改，扩展，修复，我们将 Quaver Music 1.6.0,代号 Denia 带给了各位用户！
+
+### 特性
+
+#### 猜你喜欢 - 无限电台
+
+自该版本开始，猜你喜欢不再以歌单形式存在，相反，由于每次猜你喜欢一直可以逐步获取 5 首歌曲，我们思考着为其实现成无限电台模式
+
+与此同时，我们也为无限电台实现了全新的配套 UI。
+#### UI
+
+- Quaver Music 全新主页 UI 已上线，基于现有的逻辑，和一些新上线的功能进行优化
+	- 我们还会持续优化该界面
+- Quaver Music 现已支持排行榜功能，AI 歌单功能，首页不像之前空落落了
+- Quaver Music 菜单栏全面革新，支持了极简模式，将歌单页整合进全新的歌单集合页
+
+#### 正在播放页
+
+- 实现了频谱可视化功能
+	- 首批实现：柱状、波形、镜像
+	- 支持 Sparkle 扩展
+
+### 修复
+
+- 修复了 Typhoeus-Go 良性断开一直出现严重的日志噪声
+
+与此同时，我们为 1.5.3 BackPort 了一些较为严重的问题：
+
+- 修复了歌单和我喜欢的单曲没有热更新的问题
+- Wayland 快捷键全权交给 XDG 桌面门户
+- 修复了本地歌曲重新导入歌词存在潜在的渲染错误
+- 修复了桌面歌词阴影问题，引入了一些桌面歌词设置
+- 修复了类似林俊杰 《Cries in a Distance》中出现的多行分割歌词导致桌面歌词错乱的问题
+- 修复了 Flatpak 因缺少权限导致托盘失效的问题
+
+### 优化
+
+- 我们扩长了悬浮播放控制台，以解决过于短导致拥挤感严重的问题
+
+### 官方插件
+
+- NowPlaying Push 现已上线，支持 WebHook 的应用可以获取到正在播放的音乐
+- 为 Lumen/MD3 插件适配简洁模式
+
+## v1.5.3
+
+- 修复了歌单和我喜欢的单曲没有热更新的问题（Ne0W0r1d，[提交](https://github.com/Team-Quaver/quaver-music/commit/f7b9e6db5524df62fe7de02056cb49e6d08fd377)）
+- Wayland 快捷键全权交给 XDG 桌面门户（Ne0W0r1d，[提交](https://github.com/Team-Quaver/quaver-music/commit/d2ec49bf7a87f947c79fcc52e0009f60f1284ed7)）
+- 修复了本地歌曲重新导入歌词存在潜在的渲染错误（Ne0W0r1d，[提交](https://github.com/Team-Quaver/quaver-music/commit/97465f9ef42b3d476e3857c2e7f131e83cde253c)）
+- 修复了桌面歌词阴影问题，引入了一些桌面歌词设置（Ne0W0r1d，[提交](https://github.com/Team-Quaver/quaver-music/commit/2145115871d01cfb252ef316dceab5ea20e906cc)）
+- 修复了类似林俊杰 《Cries in a Distance》中出现的多行分割歌词导致桌面歌词错乱的问题（Ne0W0r1d，[提交](https://github.com/Team-Quaver/quaver-music/commit/52dcd33d540bbba41dcf82d6e61c97546a39bcf3)）
+- 修复了歌单/我喜欢不会热重载的问题（Ne0W0r1d，[提交](https://github.com/Team-Quaver/quaver-music/commit/f7b9e6db5524df62fe7de02056cb49e6d08fd377)）
+- 修复了 Flatpak 因缺少权限导致托盘失效的问题（Ne0W0r1d，first-storm，[提交](https://github.com/Team-Quaver/quaver-music/commit/c0bf9d96c5fe9f8450ea593220c8fe9ca936860b)）
+
 ## v1.5.2
 
 - 修复了非 Wayland 环境下，透传鼠标功能不存在的问题
