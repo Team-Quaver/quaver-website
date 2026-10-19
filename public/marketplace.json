@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-10-19T03:39:34.768Z",
+  "updated": "2026-10-19T14:00:56.646Z",
   "plugins": [
     {
       "id": "aurora",
@@ -35,6 +35,17 @@
       "category": "theme",
       "download": "https://quaver.0w0.red/sparkle/plugins/md3.js",
       "hash": "f50c2cdc12402c03c4afc00115741e5e2f22433243fbb69893a0e01ba22cac7e"
+    },
+    {
+      "id": "nowplaying-push",
+      "name": "NowPlaying 推送",
+      "version": "1.0.0",
+      "author": "Team Quaver",
+      "description": "切歌时把当前播放信息推送到 Discord 或通用 JSON Webhook",
+      "category": "plugin",
+      "download": "https://quaver.0w0.red/sparkle/plugins/nowplaying-push.js",
+      "homepage": "https://github.com/Team-Quaver/quaver-sparkle",
+      "hash": "333fe104f59f62a72af0d8b5c0777de42c43d50fd2d09b771a5ae21bc68a6bcc"
     }
   ]
 }
