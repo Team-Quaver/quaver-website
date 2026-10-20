@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-10-19T14:00:56.646Z",
+  "updated": "2026-10-20T03:08:06.042Z",
   "plugins": [
     {
       "id": "aurora",
@@ -16,13 +16,13 @@
     {
       "id": "flowscape",
       "name": "Flowscape 流境",
-      "version": "1.6.3",
+      "version": "1.7.0",
       "author": "Team Quaver",
       "description": "一个复刻移动听歌史上最经典的播放页模式的插件",
       "category": "plugin",
       "download": "https://quaver.0w0.red/sparkle/plugins/flowscape.js",
       "homepage": "https://github.com/Team-Quaver/quaver-sparkle",
-      "hash": "ca9714fc90e3cae84e582e8c8af5770a5b32a24f902d161a04b49acef9dc2b0c"
+      "hash": "bd93271ae882e2bb37ad61accf3970d16469cb5124e9f20d30e83af4b5bd18e1"
     },
     {
       "id": "md3",
