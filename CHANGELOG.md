@@ -1,5 +1,37 @@
 # 更新日志
 
+## v1.6.1
+
+![Version](./images/1-6/161.webp)
+
+该版本是 1.6.0 的修复版本，与此同时，对底层相关做了一些修改
+
+- MPRIS 不再以 Typhoeus 名义发行，将集合进渲染端，以减少一些奇怪的问题
+- 修复了因为 AMLL 导致的菜单 Backdrop 问题
+- 为菜单栏，Content View 实现了模糊开关控制
+- 为播放控制条，播放列表实现了模糊效果控制
+- 当打开正在播放页后，将会停止菜单栏/内容视图的模糊渲染，以优化性能
+- 当打开播放队列的时候，将会停止 AMLL 逐行模糊，以优化性能
+- 将音质指示器 "Solid" 化，以解决莫名其妙的闪烁问题
+
+---
+
+一些项目发展公告：
+
+Quaver Music 1.7.0 / 1.8.0 / 1.9.0  均可能将成为 Quaver Music Ellen 分支（1.x）的最终版本
+
+Quaver Music 2.0 Jett 也在准备中，~~前端计划迁移到 Wails 作为主渲染引擎~~（评估完了，WebKit2GTK 就是💩，Tauri 烂的原因真不怪 Tauri）。
+
+与此同时，会持续尝试支持杜比全景声、DTS:X、黑胶解码，包括不限于 Fork MPV，或使用 Golang 在 Typhoeus 实现 FFmpeg Audio Playback Engine，至于 NAC 音质的解码器，很抱歉，暂时没招
+
+我们希望音频引擎能实现以下功能：
+
+- EQ 调节，尤其是 Graphic EQ，该 EQ 我本来也想 Vibe Coding 成一个音效插件的（给 DAW 用的），并提供一定预设，来自于 AutoEQ 的设备 EQ，与一些风格化 EQ
+- 音频解码功能完善，可以解码 AAC、Opus、Vorbis、FLAC，Wave 以及杜比全景声，DTS:X 的 Playback 音频解码
+- 支持 Pipewire/JACK、PulseAudio，ALSA Playback，Core Audio，WASAPI 共享模式（低延迟）、ASIO
+- 能够被原生分支 Quaver Astra 完全复用
+- VST/Clap 插件支持
+
 ## v1.6.0 Denia
 
 欢迎来到 Quaver Music 1.6.0 Denia！

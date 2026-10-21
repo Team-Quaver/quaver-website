@@ -1,6 +1,6 @@
 # 更新日志
 
-## v3 Furina
+## v4 Lumine
 
 - 该版本跟进了 Typhoeus-Go 的一些改进
 - 该版本重新实现了托盘
