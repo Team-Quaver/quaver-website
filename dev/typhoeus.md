@@ -95,7 +95,7 @@ Electron 主进程 ──stdio NDJSON──> mpris-daemon ─┤                
 | `qqmusic/mqtt` | `mqtt.go` | MQTT 5.0 over WSS 最小子集（手机扫码推送） |
 | `qqmusic/modules` | `login/song/user/songlist/recommend/content/singer/vip/platform/common/log` | 各业务域 CGI 薄封装（拼参 → CgiCall → ParseCGIData → 原始 JSON 透传） |
 | `qmc` | `qmc/ekey/map/rc4/tea/inplace` | QMCv2 解密：ekey 解主密钥 → Map(≤300B)/RC4(>300B) 流密码，按绝对偏移可重入 |
-| `inhibit` | `inhibit{,_linux,_darwin,_windows,_other}.go` | 电源抑制：XDG 门户/logind、IOKit、PowerRequest |
+| `inhibit` | `inhibit{,_linux,_darwin,_windows,_other}.go` | 电源抑制：Linux 双通道（sleep→Logind 直连优先、idle→XDG 门户优先，互为兜底）、macOS IOKit、Windows PowerRequest；`inhibit.Logf` 钩子由 server 接线打转移/降级日志 |
 | `tools/` | `gen_qmc_vectors.py`、`qmc_ref.py` | 开发用：生成 QMC 解密测试向量（非运行时依赖） |
 
 `vendor/Typhoeus/`（git submodule `quaver-typhoeus`）：
@@ -264,7 +264,7 @@ JSON 序列化采用 snake_case，与 Python 版 `Credential.model_dump_json()` 
 
 | 方法 路径 | 守卫 | 参数 | 响应 data / 说明 |
 | --- | --- | --- | --- |
-| `GET /` | — | — | `{backend,version}` 健康检查（waitSidecar 用它探活） |
+| `GET /`（注册模式 `GET /{$}`，只匹配根路径） | — | — | `{backend,version}` 健康检查（waitSidecar 用它探活） |
 | `GET /login/qrcode/{qq\|wx\|mobile}` | — | 路径段 ∈ qq/wx/mobile，否则 422 | `{qr_type,identifier,mimetype,data(base64),img(dataURL)}`；**mobile 型 GET 的同时启动后台 MQTT 消费任务** |
 | `GET /login/qrcode/{type}/status` | — | query `identifier`（必填，缺→422） | `{event,done,identifier,login_type,credential?,error?}`；qq/wx 每 identifier 互斥轮询（防多 tab 打上游）；mobile 读后台状态表，未知 identifier 回 `{event:3,done:true,error:"二维码不存在或已过期"}` |
 | `GET /login/status` | — | — | `{logged_in,expired,credential_mode,credential(摘要6字段)}` |
@@ -286,7 +286,7 @@ JSON 序列化采用 snake_case，与 Python 版 `Credential.model_dump_json()` 
 | 方法 路径 | 守卫 | 参数 | 响应 |
 | --- | --- | --- | --- |
 | `GET /stream/tiers` | 🔁 | — | `{membership, membership_label, tiers[当前可播], all_tiers[全量,含 locked/requires/mime/ext], max}` |
-| `POST /stream/resolve` | 🔁 | body `{mid(必填,缺→422), media_mid?, tier(缺省"128"), auto?, deprioritize?[], platform?("android"缺省/"web"/"desktop")}` | `{token, path:"/stream/<token>", tier, tier_label, requested_tier, degraded, mime, size, filename, encrypted}` |
+| `POST /stream/resolve` | 🔁 | body `{mid(必填,缺→422), media_mid?, song_type?(整型，缺省 0；provider 里 type==1→0 归一，UI 播放主链路目前不传), tier(缺省"128"), auto?, deprioritize?[], platform?("android"缺省/"web"/"desktop")}` | `{token, path:"/stream/<token>", tier, tier_label, requested_tier, degraded, mime, size, filename, encrypted}` |
 | `GET /stream/{token}` | —（token 即权限） | 请求头 `Range` 透传 | 206/200/416 音频流（`<audio>` src 指这里；UI 加 `/api` 前缀） |
 
 ### 7.4 歌曲 / 歌单
@@ -315,10 +315,11 @@ JSON 序列化采用 snake_case，与 Python 版 `Credential.model_dump_json()` 
 | `GET /search/hotkey` | — | 热搜词 |
 | `GET /recommend/guess` | `rounds=6`（钳到 1..8） | 无限电台：每轮 5 首、**必须串行**（并发上游只放行 1 个其余 700000）、按 mid 去重；单轮失败保底不回滚；全失败 502 |
 | `GET /recommend/songlist` | `page=1, num=25` | 推荐歌单流 |
+| `GET /recommend/ai-songlist` | `page=1, num=8`（钳到 1..30） | AI 歌单（网页版「AI 推荐」分类，`category_id=9527`）；归一 `{songlists,total,hasmore}`——条目取 `content.v_item[].basic`，`picurl`=cover 的 default/medium/big_url，`creator_nick`=creator.nick/name；首页已接 |
 | `GET /recommend/newsong` | `type=5` | 新歌推荐：1内地 2欧美 3日本 4韩国 5最新 6港台 |
 | `GET /recommend/daily` | `page=1, num=50` | 每日三十首：dirid=disstid=202，**上游要求登录**（匿名报 CGI 10004→401） |
-| `GET /top/category` | — | 榜单分类（GetAll） |
-| `GET /top/{top_id}/detail` | `page=1, num=50` | 榜单详情（withTags 保持布尔原样 PreserveBool） |
+| `GET /top/category` | — | 榜单分类（`musicToplist.ToplistInfoServer/GetAll` 归一 `{groups[]}`）；滤掉无音轨的分类（标题含 专辑/音乐人/MV/有声/global-k）；每榜露出 `period/update_type/update_time/history{year,sub_period}/history_supported` |
+| `GET /top/{top_id}/detail` | `page=1, num=100`、`period?` | 榜单详情，归一 `{info,songs,total,hasmore}`（与歌单详情近似，榜单页复用歌单信息头+歌曲行渲染）；`period` 缺省当前期，历史期次由前端组合（周榜 `YYYY_W`、日榜 `YYYY-MM-DD`、实时榜 `YYYYMMDDHH`；「近三个月」选择器 `ui/src/lib/toplist-periods.ts`） |
 | `GET /album/{value}/detail` | value=id/中id | 专辑详情（id→`albumId`，mid→`albumMId`——上游两处大小写不同） |
 | `GET /album/{value}/songs` | `page=1, num=50` | 专辑歌曲（`albumId`/`albumMid`） |
 | `GET /singer/{mid}/info` | — | 歌手主页头（固定 android 平台） |
@@ -506,8 +507,9 @@ Tier 结构字段：`ID/Label/Mime/Ext/Rank/Requires/Encrypted/HiRes`（JSON 可
 | 自建列表 | `music.musicasset.PlaylistBaseRead` / `GetPlaylistByUin` | uin=数字 UIN 字符串 |
 | 电台 | `music.radioProxy.MbTrackRadioSvr` / `get_radio_track` | `{id:99, num:5, from:0, scene:0, song_ids:[]}`；单轮 5 首、song_ids 回灌报 22006、并发报 700000 → **串行** |
 | 推荐歌单 | `music.playlist.PlaylistSquare` / `GetRecommendFeed` | `From/Size` |
+| AI 歌单 | `music.playlist.AiPlCategory` / `get_ai_category_content` | 网页版把 source=1 分类的 `get_category_content` 覆写为本模块同名方法（`y.qq.com/n/ryqq_v2/category?t1=9527`）；参数 `{caller=数字 uin 字符串, category_id=9527, size, page=page-1, use_page=1}`；响应 `content.v_item[].basic` 与 PlaylistSquare 不同，归一独立（勿复用 `List[*].Playlist` 路径） |
 | 新歌 | `newsong.NewSongServer` / `get_new_song_info` | `type` 见端点表 |
-| 榜单 | `music.musicToplist.Toplist` / `GetAll`、`GetDetail` | GetDetail `withTags=true` PreserveBool |
+| 榜单 | `musicToplist.ToplistInfoServer` / `GetAll`、`GetDetail` | GetDetail 参数 `{topid, offset=num*(page-1), num, period?}`——period 是历史期次开关（周榜 `YYYY_W`、日榜 `YYYY-MM-DD`、实时榜 `YYYYMMDDHH`），历史周次来自 GetAll 的 `history` |
 | 搜索(类型) | `music.search.SearchCgiService` / `DoSearchForQQMusicMobile` | 固定 android；`highlight=1, grp, selectors{}, vec_selectors[]` |
 | 搜索(综合) | `music.adaptor.SearchAdaptor` / `do_search_v2` | `search_type=100`；`page_id=page, page_num=num` |
 | 补全 | `music.smartboxCgi.SmartBoxCgi` / `GetSmartBoxResult` | `num_per_page=0, page_idx=0` |
@@ -752,16 +754,19 @@ TEA（`tea.go`）：16 轮，`teaDelta = 0x9E3779B9`（与标准 TEA 相同）�
 | 期望态判定 | sleep：`[Playing] InhibitSleep=True` && 有曲目 && 正在播（loading 不算）；idle：`player.gallery && player.expanded` |
 | 送达节流 | player.notify ~4Hz，指纹不变不打请求；失败静默（丢抑制不致命），等下轮心跳 |
 | 生命周期 | 不挂 pagehide 释放；sidecar 进程退出 → OS 自动回收（门户随 D-Bus 断、Win 句柄/macOS 断言随进程灭） |
+| 通道择一（Linux） | sleep→**Logind 直连优先**（门户兜底）；idle→**门户优先**（Logind 兜底）——「门户假成功」见 §17.2；acquire 定道后持有期不换道，release 各走各的清理；建连/降级日志见 §20.4 |
 | `supported=false` | 本编译目标无平台实现（`inhibit_other.go`），`reason` 说明 |
 
 ### 17.2 平台实现常量
 
 | 平台 | 机制 | 关键值 |
 | --- | --- | --- |
-| Linux（首选） | XDG Desktop Portal `org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.Inhibit` | flags：`0x1`=Logout `0x2`=UserSwitch **`0x4`=Suspend（sleep 模式）** **`0x8`=Idle（idle 模式）**；`handle_token="quaver"+base36(nanos%1e9)`；reason 文案 `"Quaver 正在播放音频"` / `"Quaver 正在画廊播放"`；等 Response 信号超时 `4s`，清理 250ms |
-| Linux（回退） | logind 直连 `org.freedesktop.login1.Manager.Inhibit` | `who="Quaver"`、`why=同上`、`mode="block"`，持 fd 释放 |
+| Linux（idle 首选 / sleep 兜底） | XDG Desktop Portal `org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.Inhibit`（规范 v3） | flags：`0x1`=Logout `0x2`=UserSwitch **`0x4`=Suspend（sleep）** **`0x8`=Idle（idle）**；`handle_token="quaver"+base36(nanos%1e9)`；reason 文案 `"Quaver 正在播放音频"` / `"Quaver 正在画廊播放"`；**先订 `Request::Response` 再调用**（method return 与 Response 常同段抵达），并按信号路径过滤、只认自己 Request 的应答；等 Response 超时 `4s`，清理 250ms；持有=Request 句柄存活，释放=`Request.Close()`（NO_REPLY_EXPECTED 尽力而为） |
+| Linux（sleep 首选 / idle 兜底） | logind/elogind 直连（**系统总线**，与会话总线互不影响、坏一个不拖另一个） `org.freedesktop.login1.Manager.Inhibit` | `what`=`"sleep"`/`"idle"`（按 Mode）、`who="Quaver"`、`why=同上文案`、`mode="block"`；返回 fd——开着即持有、`Close` 即释放（进程退出同样回收）；polkit 对活跃会话默认放行（`inhibit-block-sleep` `allow_active=yes`），会话总线都不可用的环境照样能走 |
 | macOS | IOKit `IOPMAcquireAssertion…`（purego dlopen，零 cgo） | AssertType：sleep→`PreventUserIdleSystemSleep`、idle→`PreventUserIdleDisplaySleep`；AssertLevel=`255`（kIOPMAssertionLevelOn）；AssertName=`"Quaver"`（`pmset -g assertions` 可见） |
-| Windows | `PowerCreateRequest/PowerSetRequest/PowerClearRequest`（kernel32，Win7+ 无需特权） | ModeSleep→`PowerRequestSystemRequired`(1)、ModeIdle→`PowerRequestDisplayRequired`(0)；REASON_CONTEXT `Version=0, Flags=0x1`(SimpleReasonString)；错误路径全 return error 绝不 panic |
+| Windows | `PowerCreateRequest/PowerSetRequest/PowerClearRequest`（kernel32，Win7+ 无需特权） | ModeSleep→`PowerRequestSystemRequired`(1)、ModeIdle→`PowerRequestDisplayRequired`(0)；REASON_CONTEXT `Version=0, Flags=0x1`(SimpleReasonString，带分模式中文文案)；错误路径全 return error 绝不 panic（LazyProc 先 `Find` 探测再调用） |
+
+**为什么 sleep 走 Logind 直连**（2026-10-20 修复的源头）：不成熟的窗管/桌面（实测 Hyprland + xdg-desktop-portal-gtk）下门户可能应答 `code=0`，却没有任何后端真正登记抑制——「假成功」。睡眠最终由 logind 执行，门户的 Response=0 不能作为 sleep 抑制生效的可靠依据，故 **sleep 首选 Logind 直连、门户只做兜底**。反过来，桌面空闲多由会话/合成器管理，logind 的 idle inhibitor 不一定拦得住合成器自己的 idle 定时器，故 **idle 仍以门户优先**。门户路径不以「systemd-logind/elogind 的 inhibitor 列表里有没有自己」作验收条件——桌面会话服务可能代表本进程持有实际抑制。两条通道互斥：acquire 定道，持有期不换道（release 各清各的）。
 
 ## 18. MPRIS 守护进程
 
@@ -876,6 +881,7 @@ pnpm run dev / pnpm run app               # 主进程 spawn，QCRED1 走 stdin/s
 
 - `QSG_DEBUG_CGI=1`：stderr 打印每条 CGI 的 module/method/payload 大小（诊断用，勿留日志）。
 - 会员判定/嗅探放行/平台回退等协商线索 → sidecar stderr（`electron-dev.log`）`WARN` 行（`typhoeus.Logf = logWarn` 接线）。
+- 电源抑制：持有/释放打 `INFO`（`睡眠禁止：已持有`/`空闲禁止：已释放`），通道降级打 `WARN`（`…改走 Logind 直连`/`…改走 XDG 门户`）——`inhibit.Logf` 在 `server/app.go NewApp` 接线，只有转移/降级才打，幂等重入不刷屏。自证：`systemd-inhibit --list` 应出现 Quaver 的 sleep/inhibit 持有者（Logind 路径），macOS 用 `pmset -g assertions`（AssertName=Quaver）。
 - `GET /login/status` 的 `credential_mode` 可手工 curl 确认交接模式。
 - QMC 算法改动：先 `tools/gen_qmc_vectors.py` 重生成向量再 `go test ./qmc/`。
 - curl 手测样例：`curl 127.0.0.1:3200/`、`…/stream/tiers`、`POST /stream/resolve {"mid":"001qhwq62Urz06","tier":"flac","auto":true}`。
@@ -899,6 +905,7 @@ pnpm run dev / pnpm run app               # 主进程 spawn，QCRED1 走 stdin/s
 15. 档位表变更的连带清单：后端 `tierTable` ↔ UI `QUALITIES/QUALITY_SHORT/songtiers(SIZE_NEW_INDEX)/prefs 白名单` ↔ README/本指南——四处必须同步。
 16. `GET /song/{value}/detail` 等 `{value}` 通配段数字/字符串双栖（`isDigits` 分流 songId/songMid）；路由用 Go 1.22 模式语法，字面量段优先于通配段（`/songlist/fav/check` 与 `/songlist/{id}/detail` 共存即靠此）。
 17. `POST /song/urls` 顶层 `file_type` 整段缺省得到 0（DTS_X）——调用方需要默认档请显式传 13；per-item 传 `null` 才是继承。
-18. MPV/FFmpeg 集成与 MPRIS 回迁仍在计划中（与本文档无关，但改 MPRIS/inhibit 前先读 §17/§18 的进程拓扑）。
+18. **Linux inhibit 通道优先级不可回退成「单门户路径」**：sleep 必须 Logind 直连优先（不成熟桌面/窗管下门户会假成功——Response=0 但无人登记抑制）；idle 保持门户优先（合成器空闲定时器不归 logind 管）。定道后持有期不换道、门户响应按 Request 路径过滤——都是 2026-10-20 修复的组成部分，别「统一」掉。
+19. MPV/FFmpeg 集成与 MPRIS 回迁仍在计划中（与本文档无关，但改 MPRIS/inhibit 前先读 §17/§18 的进程拓扑）。
 
 > 维护提示：本指南与代码同仓演进。新增常量/端点/错误码时，请在对应表格登记；删档（如本轮的 Python 后端）请同时从指南移除对应章节。

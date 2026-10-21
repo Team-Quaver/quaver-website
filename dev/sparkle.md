@@ -1,6 +1,6 @@
 # 花火插件（Sparkle）开发指南
 
-花火插件是 Quaver Music 的插件系统。插件是一个实现 `SparklePlugin` 的对象：在 `setup(ctx)` 里通过 `SparkleContext` 注册扩展点（路由 / 侧栏 / 设置页 / 主题与主题包 / 全站样式层 / 正在播放页 / 右键菜单 / 播放源 / 歌词渲染），返回的函数（可选）作为 dispose，在插件停用时调用。
+花火插件是 Quaver Music 的插件系统。插件是一个实现 `SparklePlugin` 的对象：在 `setup(ctx)` 里通过 `SparkleContext` 注册扩展点（路由 / 侧栏 / 设置页 / 主题与主题包 / 全站样式层 / 正在播放页 / 真实音频频谱 / 右键菜单 / 播放源 / 歌词渲染），返回的函数（可选）作为 dispose，在插件停用时调用。
 
 SDK 与官方插件托管在独立仓库 **quaver-sparkle**，以 git submodule 挂在主仓库的 `vendor/Sparkle`（与 `vendor/Typhoeus` 同模式）。ui 的 Vite 通过 alias 把 SDK 源码级打进 `ui/dist`，该仓库不单独构建：
 
@@ -17,9 +17,11 @@ SDK 与官方插件托管在独立仓库 **quaver-sparkle**，以 git submodule 
 | | 官方插件（`kind: "official"`） | 第三方插件（`kind: "third-party"`） |
 |---|---|---|
 | 形态 | 源码在 quaver-sparkle 的 `plugins/<id>/`，随宿主静态打包（Vite 代码分割，启用才加载） | ESM **单文件** `main.js`，安装到配置目录 `plugins/<id>/`，运行时动态 `import()` |
-| 默认状态 | 默认启用（用户显式停用后不再自动启用；标 `required` 的**内置必装**插件恒启、停不掉） | 安装后默认**关闭**，需手动启用 |
-| 依赖 | 可正常 import 任何被打包的依赖（如 AMLL） | 必须**自包含**：运行时 URL 下没有 bare import 解析，依赖要全部打进这一个文件 |
+| 默认状态 | 默认启用（用户显式停用后不再自动启用） | 安装后默认**关闭**，需手动启用 |
+| 依赖 | 可正常 import 任何随宿主打包的依赖 | 必须**自包含**：运行时 URL 下没有 bare import 解析，依赖要全部打进这一个文件 |
 | 分发 | 随宿主更新 | Marketplace 索引 + 主进程代下载，或本地手装 |
+
+注意：Marketplace 里的「官方收录」说的是索引来源，不是 `kind: "official"`。目录 `plugins/` 下、与宿主一起打包的才是 official；`marketplace/` 下的 MD3（Lumen）、Flowscape 等仍按第三方插件安装，清单里写 `kind: "third-party"`。
 
 插件作者唯一需要 import 的模块是 SDK 入口：
 
@@ -63,22 +65,25 @@ export default definePlugin({
 现成示例按难度排：
 
 - `plugins/die-for-you/index.ts` — `registerSettingsSection` 的最小集成与 dispose 写法；
-- `plugins/amll/index.ts` — 歌词提供器（parse + render）的完整实践：内置必装、逐字与行级 LRC 都渲染，见下文[歌词提供器](#歌词提供器)；
+- `marketplace/nowplaying-push/index.ts` — 订阅 `ctx.player.on()`、用 `ctx.storage` 保存设置、切歌去重与 Webhook 推送；
 - `marketplace/aurora/index.ts` — 自定义主题（`registerTheme`）的最小形态；
-- `marketplace/flowscape/index.ts` — 整页接管正在播放页（专辑流 + 自绘控制带），见[整页接管正在播放页](#整页接管正在播放页)。
+- `marketplace/md3/index.ts` — 变量主题、主题包、主题接管策略与插件设置区的完整组合；
+- `marketplace/flowscape/index.ts` — 整页接管正在播放页（专辑流、歌词延迟、无限电台与自绘控制带），见[整页接管正在播放页](#整页接管正在播放页)。
 
 ## 生命周期
 
-- **启用**：宿主加载模块 → 形状校验（`id` 匹配 `^[a-z0-9][a-z0-9-]*$`、`name`/`version` 为字符串、`kind` 合法、`setup` 为函数；第三方插件 `id` 必须与目录名一致）→ `setup(ctx)`。注册动作在 `setup` 里调用即生效：nav DOM 立即补挂、正在播放页部件立即 mount、侧栏立即重画。
+- **启用**：宿主加载模块 → 形状校验（`id` 匹配 `^[a-z0-9][a-z0-9-]*$`、`name`/`version` 为字符串、`kind` 合法、`minHostVersion` 是合法 SemVer、`allowBeta` 是布尔值、`setup` 为函数；第三方插件 `id` 必须与目录名一致）→ `setup(ctx)`。注册动作在 `setup` 里调用即生效：nav DOM 立即补挂、正在播放页部件立即 mount、侧栏立即重画。
 - **broken 态**：`setup` 抛错 = 宿主倒序回滚已注册的半截资源，标记 broken（toast 提示、不写入启用集合、本会话内不再尝试），不影响其它插件。设置页显示「启动失败」。
 - **停用**：宿主倒序执行本插件所有注册项的反注册闭包（删路由 / 侧栏项 / CSS / 菜单项…），再调用 `setup` 返回的 dispose；若正停在该插件的路由页则跳回首页。
 - **启动顺序**：`initSparkle()` 在 `bootShell()` 之后调用、不阻塞首帧——插件的视图/侧栏项/设置区在首帧后补挂，属渐进增强。官方插件先于第三方插件，逐个串行启用。
 
-启用集合等状态持久化在 localStorage（键见文末[一览表](#localstorage-键一览)）。官方插件的默认启用由 `official-known`（见过的官方插件）播种：新官方插件发布时老用户自动默认启用，且不重置用户显式停用过的插件（`official-off` 标记）。例外是标记 `required: true` 的**内置必装**插件（目前是 AMLL 歌词渲染器）：`init.ts` 启动即强启、`host.ts` 的 `disableSparklePlugin` 直接拒绝、设置页开关锁死，`official-off` 也一并无视 —— 宿主摘掉它就没可用的歌词渲染了。
+启用集合等状态持久化在 localStorage（键见文末[一览表](#localstorage-键一览)）。官方插件的默认启用由 `official-known`（见过的官方插件）播种：新官方插件发布时老用户自动默认启用，且不重置用户显式停用过的插件（`official-off` 标记）。
+
+AMLL 已从「内置必装的官方插件」退役，改成宿主内置歌词引擎（`ui/src/lyrics/amll.ts`）：没有开关、不出现在插件列表，作为注册表里排在所有插件提供器之后的兜底提供器存在。`initSparkle()` 会通过 `RETIRED_OFFICIAL_IDS` 清掉旧 localStorage 里的 `amll` 记录；不要再往 `plugins/` 或 `OFFICIAL_META` 里加回它。
 
 ## SparkleContext 参考
 
-`setup(ctx)` 拿到的 `ctx` 上有**十四个注册方法**（均只能在 setup 期调用，pluginId 由宿主闭包提供），加五个工具：`storage` / `toast` / `log` / `player` / `style`。
+`setup(ctx)` 拿到的 `ctx` 上有**十五个注册方法**（均只能在 setup 期调用，pluginId 由宿主闭包提供），加五个工具：`storage` / `toast` / `log` / `player` / `style`。
 
 | 方法 | 作用 | 停用 / 回滚 |
 |---|---|---|
@@ -86,16 +91,17 @@ export default definePlugin({
 | `registerNav` | 侧栏导航项（追加在内置项后） | 移除 DOM |
 | `registerSonglistGroup` | 侧栏歌单分组（`items()` 每次重画取最新） | 移除分组并重画侧栏 |
 | `registerSettingsSection` | 设置页「花火插件」面板的设置分组 | 随面板销毁 |
-| `registerTheme` | 变量级自定义主题 | 删 style；若正激活该主题则回落默认；高亮色 / 背景 / 菜单外观策略同步重算 |
+| `registerTheme` | 变量级自定义主题 | 删 style；若正激活该主题则回落默认；高亮色 / 背景 / 菜单外观 / 控制条 / 歌单模式策略同步重算 |
 | `registerStyleLayer` | 全站样式层（任意 CSS） | 摘掉这张 `<style>` |
 | `registerThemePack` | 可切换的主题包（一套完整风格） | 停用插件即摘除；若正选中该包则自动回落默认外观 |
 | `registerNowPlayingWidget` | 正在播放页歌词区下方的小部件 | 移除 DOM + 调 render 的清理函数 |
 | `registerNowPlayingView` | 整页接管正在播放页 | 卸载插件视图、恢复默认布局、恢复播放条 |
+| `registerNowPlayingSpectrumMode` | 注册正在播放页的真实音频频谱形态 | 移出模式表；若正在使用则回落 `bars` |
 | `registerSongMenuItem` | 歌曲右键菜单项 | 移除菜单项 |
 | `registerPlaylistMenuItem` | 侧栏歌单右键菜单项 | 移除菜单项 |
 | `registerNowPlayingMenuItem` | 正在播放页「更多操作」菜单项 | 移除菜单项 |
 | `registerStreamSource` | 备用播放源链的一环 | 移出源链 |
-| `registerKaraokeProvider` | 歌词提供器（逐字 QRC/TTML + 行级 LRC） | 移除 provider；正在播放页回退内置行级歌词 DOM |
+| `registerKaraokeProvider` | 歌词提供器（逐字 QRC/TTML + 行级 LRC） | 移除 provider；回退宿主内置歌词引擎或行级歌词 DOM |
 
 ### registerView(path, view)
 
@@ -191,6 +197,29 @@ ctx.registerNowPlayingWidget({
 
 **整页接管**正在播放页：宿主让出 `.np-inner`、隐藏原播放条与插件槽，插件自绘整页。`v.enabled()` 返回 false 时不接管。详见[整页接管正在播放页](#整页接管正在播放页)。
 
+### registerNowPlayingSpectrumMode(mode)
+
+给正在播放页的真实音频频谱注册一种自绘形态，与内置 `bars` / `mirror` / `wave` 同表。`id` 必须是小写 kebab-case、全局唯一且不超过 32 个字符；`label` 非空。形态会出现在正在播放页「更多操作 → 频谱模式」里：
+
+```ts
+ctx.registerNowPlayingSpectrumMode({
+  id: "my-spectrum",
+  label: "我的频谱",
+  render(host, spec) {
+    // host 是频谱槽内的容器，尺寸随窗口变化。
+    // spec.frame() 取当前帧；spec.onFrame(cb) 约 60Hz 推送，返回退订函数。
+    const off = spec.onFrame((frame) => {
+      // frame.bins：FFT 幅度 0..1；frame.wave：波形 -1..1；frame.level：RMS 0..1
+      // 两个数组按帧复用；要跨帧保留请自行 copy。
+      void frame;
+    });
+    return () => off();
+  },
+});
+```
+
+`render` 的 `spec` 还能读 `expanded()` / `paused()` / `current()`。播放器暂停时应停止绘制或把动画收敛到静音态；插件停用、模式切走或出现异常时，宿主会清理并回落到 `bars`。只想取数据、不注册新形态的写法见[真实音频频谱](#真实音频频谱透传--扩展)。
+
 ### registerSongMenuItem(item | fn)
 
 歌曲右键菜单追加项（排在「更多操作」之前）。可传对象，也可传函数按上下文动态生成：
@@ -260,18 +289,19 @@ ctx.registerStreamSource({
 - `ctx.player`：播放器**只读**门面，插件不能直接改队列或播放状态：
 
 ```ts
-ctx.player.current   // { mid, name, singer: [{name}], album: {name?, mid?} } | null（快照）
+ctx.player.current   // SparkleSongSnapshot | null（mid / name / singer / album / interval；可选 src / localCover）
 ctx.player.time      // 当前播放位置，秒
 ctx.player.paused    // 是否暂停
 const off = ctx.player.on(() => { /* 约 4Hz + 播放态等状态变化即发 */ });
 // 在 dispose 里调用 off() 退订
 ```
 
+- `ctx.player.spectrum?.()` / `ctx.player.onSpectrum?()`：按需取真实音频频谱帧 / 逐帧订阅（约 60Hz）。旧宿主没有这两个方法，读取前判空。整页接管或自定义频谱形态的写法见[真实音频频谱](#真实音频频谱透传--扩展)。
 - `ctx.style`：样式门面（`register` / `packs` / `state` / `activate` / `reset` / `onChange`），只给三件事——追加自己的常驻样式层、读已注册的主题包、请求切换主题包；插件**不能**直接操作别人注入的 `<style>`。见[主题包](#主题包)。
 
 ## 歌词提供器
 
-`SparkleKaraokeProvider` 分两段接管歌词；逐字（QRC/TTML）与行级（普通 LRC）都能交给它，内置的 AMLL 插件两种都渲染：
+`SparkleKaraokeProvider` 分两段接管歌词；逐字（QRC/TTML）与行级（普通 LRC）都能交给它。宿主内置的 AMLL 引擎两种都渲染，但它**不是插件**：它在注册表里排在所有插件提供器之后，作为默认兜底。
 
 ```ts
 ctx.registerKaraokeProvider({
@@ -287,12 +317,12 @@ ctx.registerKaraokeProvider({
   render(host, lines, ctx): (() => void) | void,
 
   // ③ 可选总开关：宿主每次 notify 重读，false 即回退行级歌词，切换即时生效。
-  //    （内置 AMLL 不注册它 —— 它不可停用，也没有「关掉」这一档。）
+  //    （宿主内置 AMLL 不注册它 —— 它没有「关掉」这一档。）
   enabled?: () => boolean,
 });
 ```
 
-行结构 `SparkleKaraokeLine` 与 `@applemusic-like-lyrics/core` 的 `LyricLine` 兼容：`words: {word, startTime, endTime}[]`（毫秒时间轴；单词可带 `romanWord` 音译与 `ruby` 注音片段）、`startTime`/`endTime`、可选 `translatedLyric`（翻译）与 `romanLyric`（行级音译）——辅助行档位由渲染方按 `ctx.lyricAux()` 自行取舍、`isBG`（背景人声）、`isDuet`（对唱行靠右）。停用插件即宿主移除 provider，正在播放页回退内置行级歌词 DOM；多个 provider 先注册先得，**内置 AMLL 是默认且不可停用的那一个**。
+行结构 `SparkleKaraokeLine` 与 `@applemusic-like-lyrics/core` 的 `LyricLine` 兼容：`words: {word, startTime, endTime}[]`（毫秒时间轴；单词可带 `romanWord` 音译与 `ruby` 注音片段）、`startTime`/`endTime`、可选 `translatedLyric`（翻译）与 `romanLyric`（行级音译）——辅助行档位由渲染方按 `ctx.lyricAux()` 自行取舍、`isBG`（背景人声）、`isDuet`（对唱行靠右）。多个插件 provider 先注册先得；不注册或停用插件时回落到宿主内置 AMLL。插件 provider 的 `parse` 返回 null/空表时不会回落到 AMLL，而是直接回退宿主行级歌词 DOM——所以覆盖内置时要把逐字、行级和注音都认全。
 
 `render` 拿到的 `ctx` 是宿主实时状态的**只读闭包**（每次调用读到的都是当前态）：
 
@@ -303,10 +333,11 @@ ctx.registerKaraokeProvider({
 | `expanded()` | 正在播放页是否展开；收起时应冻结渲染循环省资源 |
 | `showTrans()` | 「翻译」开关当前状态 |
 | `lyricAux()` | 歌词辅助行模式：`off`（关闭）/ `translation`（翻译）/ `romanization`（音译，与翻译替换，无音译数据时回落翻译） |
+| `lyricDelay?()` | 当前曲的用户歌词延迟，毫秒；正数 = 歌词更晚出现。驱动动画用 `time() - lyricDelay()`，点击行跳转时把延迟加回 `seek()`。旧宿主缺省按 `0` 处理 |
 | `seek(ms)` | 跳转到指定位置 |
 | `onNotify(cb)` | 订阅宿主通知（约 4Hz + 播放态/展开收起等状态变化即发），返回退订函数 |
 
-宿主 notify 只有 4Hz，逐字扫色需要逐帧时间，所以渲染要**自驱 rAF 时钟**，用 ctx 闭包逐帧读状态。AMLL 官方插件（`plugins/amll/index.ts`）沉淀了四条必须遵守的经验：
+宿主 notify 只有 4Hz，逐字扫色需要逐帧时间，所以渲染要**自驱 rAF 时钟**，用 ctx 闭包逐帧读状态。宿主内置 AMLL（`ui/src/lyrics/amll.ts`）的实现沉淀了四条必须遵守的经验：
 
 1. **收起冻结、notify 唤醒**：`expanded()` 为 false 时停掉 rAF；重新展开必须靠 `ctx.onNotify` 唤醒自己的循环——收起时自停的 rAF 没有人会替你重启，漏了这条歌词会永久冻结。
 2. **时间去抖**：宿主的 position 是外推时钟（~4Hz 快照重同步），重同步瞬间可能回跳几十毫秒；对小幅倒退（<250ms）钳平为原值，只有超过阈值的真·seek 才放行倒退，否则渲染引擎会把每次小幅回跳都当跳转处理。
@@ -452,7 +483,47 @@ ctx.registerTheme({
 ctx.registerTheme({ id: "t2", name: "T2", css: `…`, menus: { mode: "host" } });
 ```
 
-`tint`、`background` 与 `menus` 各自独立声明：只声明其中一个，另两个仍然按「不声明 = 主题接管」算。
+#### 播放控制条停靠形态 —— `theme.controlBar`
+
+主题可以接管「设置 → 外观 → 播放控制条」的停靠形态：
+
+| 写法 | 谁管停靠形态 | 效果 |
+| --- | --- | --- |
+| **不写 `controlBar`**（默认） | 宿主 | 用户偏好照常生效；主题仍可用 CSS 覆盖 `--control-bar-*` 和 `body[data-control-bar]` 的外观 |
+| `controlBar: { mode: "bottom" }` | 主题 | 强制底部停靠；设置页对应卡片禁用并注明由主题接管 |
+| `controlBar: { mode: "floating" }` | 主题 | 强制悬浮停靠；设置页对应卡片禁用并注明由主题接管 |
+| `controlBar: { mode: "host" }` | 宿主 | 显式把停靠权还给用户偏好；切换/停用主题时宿主会重算 |
+
+```ts
+ctx.registerTheme({
+  id: "compact-player",
+  name: "Compact Player",
+  css: `body { --control-bar-width: min(560px, calc(100vw - 360px)); }`,
+  controlBar: { mode: "floating" },
+});
+```
+
+#### 歌单显示模式 —— `theme.playlistMode`
+
+主题也可以接管「设置 → 外观 → 歌单」的显示模式：
+
+| 写法 | 谁管显示模式 | 效果 |
+| --- | --- | --- |
+| **不写 `playlistMode`**（默认） | 宿主 | 用户偏好照常生效（默认「菜单栏」）；主题仍可用 CSS 调整两态外观 |
+| `playlistMode: { mode: "menu" }` | 主题 | 侧栏歌单区照常列出「我创建的歌单 / 收藏的歌单」 |
+| `playlistMode: { mode: "collection" }` | 主题 | 侧栏歌单区隐藏，导航按钮在侧栏内垂直居中；歌单改到 `#/playlists` 以 grid 分区展示 |
+| `playlistMode: { mode: "host" }` | 宿主 | 显式把呈现权还给用户偏好；切换/停用主题时宿主会重算 |
+
+```ts
+ctx.registerTheme({
+  id: "my-designer",
+  name: "My Designer",
+  css: `/* … */`,
+  playlistMode: { mode: "collection" },
+});
+```
+
+`tint`、`background`、`menus`、`controlBar`、`playlistMode` 各自独立声明。前三个缺省 = 主题接管；`controlBar` 与 `playlistMode` 缺省 = 宿主偏好。只声明其中一个时，其余仍按各自缺省处理。
 
 ### 全站样式层
 
@@ -516,10 +587,10 @@ ctx.registerNowPlayingView({
   id: "my-np",
   enabled: () => ctx.storage.get("on") !== "off", // 可选总开关，宿主每次 notify 重读
   render(host, np) {
-    // host 铺满 .np；宿主已隐藏默认布局（歌词列 + 右侧信息列）、插件槽与底部播放条。
+    // host 铺满 .np-inner；宿主已隐藏默认布局（歌词列 + 右侧信息列）、插件槽与底部播放条。
     // 背景的模糊封面层（.np-bg）与压暗层（.np-scrim）仍在，可以直接借来当底色。
     host.innerHTML = `…`;
-    np.prevCard.onclick = () => np.prev();   // 上下曲绑在封面上
+    host.querySelector<HTMLButtonElement>("[data-prev]")!.onclick = () => np.prev();
     const off = np.onNotify(() => paint());
     return () => { off(); host.innerHTML = ""; };
   },
@@ -531,9 +602,10 @@ ctx.registerNowPlayingView({
 | 分类 | 方法 |
 |---|---|
 | 页面 | `expanded()` / `gallery()` / `collapse()` |
-| 曲目 | `current()` / `prevSong()` / `nextSong()` / `songAt(offset)` / `queueLength()` |
+| 曲目 | `current()` / `prevSong()` / `nextSong()` / `songAt(offset)` / `queueLength()` / `radioActive?()` / `radioLoading?()` / `radioError?()` |
 | 传输（只读） | `time()` / `duration()` / `paused()` / `loading()` / `error()` |
-| 歌词（只读） | `lyrics()` / `lyricState()` / `showTrans()` / `lyricAux()` / `karaoke()` / `karaokeActive()` |
+| 歌词（只读） | `lyrics()` / `lyricState()` / `showTrans()` / `lyricAux()` / `lyricDelay?()` / `karaoke()` / `karaokeActive()` |
+| 频谱 | `spectrum?()` → `enabled / setEnabled / status / mode / modes / setMode / frame / onFrame` |
 | 音量（只读） | `volume()` / `muted()` |
 | 音质（只读） | `quality()` / `qualityLabel()` / `lastStream()` / `qualityTiers()` |
 | 控制 | `toggle()` / `seek(sec)` / `next()` / `prev()` / `jumpTo(offset)` / `setVolume(v)` / `toggleMute()` / `switchQuality(id)` / `toggleTrans()` / `loved(mid)` / `toggleLove()` |
@@ -547,13 +619,37 @@ ctx.registerNowPlayingView({
 - **`prev()` 是 force 语义**：忽略设置里的「重放当前曲」，直跳队列上一首。封面流的「点左封面 = 上一首」必须是这个，否则点了会原地重播。
 - **notify 只有 ~4Hz**。位置是外推时钟，要跟手的进度条/歌词高亮得自驱 rAF；收起时自停、重新展开靠 `onNotify` 唤醒（自停的 rAF 没人会替你重启）。
 - **`qualityTiers()` 初次可能为空**：档位表是异步拉的，就绪时宿主会主动多广播一次 notify，不必自己轮询。
+- **本地/NAS 曲目是另一个播放世界**：快照的 `src` 为 `"local"` / `"nas"`（旧宿主可按 `mid.startsWith("local:")` 兜底）。这类曲目没有在线音质阶梯，`qualityTiers()` 恒为空、`switchQuality()` 为空操作；也没有红心，`loved()` 恒 false。封面优先用 `localCover`，再用 `album.mid/pmid` 回落 CDN。接管视图据此收掉或替换没有意义的控件。
+- **无限电台只向前**：`radioActive()` 为真时 `songAt(-1)` 恒为 null，不要画左侧上一首/上上首；`radioLoading()` 为真时画续轮等待态，`radioError()` 非空时显示可读错误。这三个方法在旧宿主上可能缺失，统一用 `?.()` 并给缺省值。
 - 接管期间**不要再自己画背景模糊**：宿主那两层还在，重复铺只会白烧一次解码。
-- **想画歌词就复用宿主已激活的提供器**：`karaoke()` 直接给出提供器解析好的行（毫秒时间轴），这些行是 `registerKaraokeProvider` 的插件（如内置 AMLL）解析的——别自己重写 QRC/TTML/LRC 解析。`karaokeActive()` 表示此刻是否真的接管中（有数据 + 提供器在位且启用）；提供器自带 `enabled()` 关掉时为 false 但 `karaoke()` 可能还留着上次的结果。false 时务必回退 `lyrics()` 行级，否则提供器被关掉后你的页面还在逐字跳（内置 AMLL 不注册开关、宿主又摘不掉它，默认播放页里恒在）。逐词高亮的时钟用自己的 rAF（notify 只有 4Hz）。
+- **歌词延迟要跟着吃**：`lyricDelay?()` 返回当前曲的用户微调（毫秒，正数 = 歌词更晚出现，按歌曲存宿主 localStorage）。`time()` 不含它：选当前行用 `time() - lyricDelay()/1000`，点击行跳转把延迟加回 `seek(行秒 + lyricDelay()/1000)`。旧宿主用 `lyricDelay?.() ?? 0`。
+- **想画歌词就复用宿主已激活的提供器**：`karaoke()` 直接给出解析好的行（毫秒时间轴），默认由宿主内置 AMLL 解析（逐字 QRC/TTML、行级 LRC、`words[].ruby` 振假名）；注册插件提供器后给出的就是你的 `parse` 结果——别自己重写 QRC/TTML/LRC 解析。`karaokeActive()` 表示此刻是否真的接管中（有数据 + 提供器在位且启用）；提供器自带 `enabled()` 关掉时为 false 但 `karaoke()` 可能还留着上次的结果。false 时务必回退 `lyrics()` 行级，否则提供器被关掉后页面还在逐字跳。逐词高亮的时钟用自己的 rAF（notify 只有 4Hz）。
 - **要「跳转歌手/专辑/搜索」直接写 hash 路由**（`location.hash = "#/singer?mid=…&name=…"`、`#/album?mid=…&name=…`、`#/search?keyword=…`），歌手/专辑的 mid 在曲目快照里。但记住：**正在播放页是铺满全窗的常驻悬浮层，只换路由它仍盖在最上面**——跳转前先 `np.collapse()`，否则用户点完什么都看不到变。
-- 插件仍拿不到队列本体（只能读当前曲与两个邻曲），也改不了播放模式。
+- 插件仍拿不到队列本体（只能读当前曲、按播放顺序取偏移与队列长度），也改不了播放模式。
 - 多个整页接管视图**先注册先得**；停用插件或关掉 `enabled()` 即回默认布局，不需要额外的反向通道。
 
 参考实现：`marketplace/flowscape/index.ts`（Flowscape 流境——专辑流 + 自绘控制带）。
+
+## 真实音频频谱（透传 + 扩展）
+
+宿主的正在播放页频谱由真实播放流驱动（WebAudio FFT + 时域波形），默认关闭，内置柱状 / 镜像 / 波形。插件有两条接入路径：
+
+1. **只取数据自己画**：`ctx.player.spectrum?.()` 取一帧，`ctx.player.onSpectrum?()` 逐帧订阅（约 60Hz）；整页接管里也可用 `np.spectrum?.()` 读写宿主开关和形态。第一次取帧会异步启动分析器，启动前返回 `null`；`bins` / `wave` 数组按帧复用，跨帧保留要自己 copy。
+2. **注册新形态**：`ctx.registerNowPlayingSpectrumMode()`，见上方[扩展点](#registernowplayingspectrummodemode)。
+
+`SparkleSpectrumFacade` 的读侧 / 控制面：
+
+| 方法 | 语义 |
+|---|---|
+| `enabled()` / `setEnabled(on)` | 频谱总开关，与正在播放页 ⋮ 菜单同一份持久化偏好 |
+| `status()` | `idle` / `starting` / `live` / `unavailable`；不可用表示当前流无法被 WebAudio 分析 |
+| `mode()` / `modes()` / `setMode(id)` | 当前形态、内置 + 已启用插件形态列表、切换形态；未知 id 会被忽略 |
+| `frame()` | 取当前帧；首次调用异步启动，未就绪返回 `null` |
+| `onFrame(cb)` | 逐帧订阅，返回退订函数 |
+
+`SparkleSpectrumFrame` 里 `bins` 是归一化 FFT 幅度（0..1），`wave` 是时域波形（-1..1），`level` 是 RMS 能量，`sampleRate` 用于把频点下标换算成 Hz，`active` 表示音频是否真正在播放。暂停时应在插件自己的渲染循环里降帧或收敛到静音态。
+
+整页接管时宿主自带的频谱槽会隐藏，插件要用 `np.spectrum?.()` 自己绘制；关掉接管后宿主默认布局接着显示。插件只注册形态、不接管整页时，宿主会负责频谱槽的挂载与交叉淡化。
 
 ## 第三方插件：打包、安装与调试
 
@@ -588,19 +684,18 @@ Marketplace 标签里的红色渐变「添加本地插件」按钮面向**最终
 
 ## 设置页面板结构（v2）
 
-「花火插件」面板分**四个相互隔离的标签**：
+「花火插件」面板分**三个相互隔离的标签**：
 
 | 标签 | 内容 |
 |---|---|
 | 主题 | category=theme 的已装插件；开关启停提供它的插件，齿轮仅在该插件真的注册了设置区（高级选项）时出现；下方「主题风格」一行是主题包选择（见[主题包](#主题包)）与「暂停全部插件样式」总闸 |
-| 插件 | 官方插件 + category 非 theme/extension 的第三方；行内 [齿轮][启用开关][卸载]。齿轮仅在该插件真的注册了设置区时出现；`required` 内置插件的启用开关锁死并回显「不可停用」 |
-| 扩展 | category=extension 的已装插件，行内布局与插件标签相同 |
-| Marketplace | 固定索引源（只读+刷新）+ 红色渐变「添加本地插件」+ 全量索引列表（条目按 category 打徽标，顶部 全部/主题/插件/扩展 chips 过滤） |
+| 插件 | 官方插件 + category 非 theme 的第三方（旧 `extension` 分类一并归入这里）；行内 [齿轮][启用开关][卸载]。齿轮仅在该插件真的注册了设置区时出现 |
+| Marketplace | 红色渐变「添加本地插件」+ 全量索引列表（条目按 category 打徽标，顶部 全部/主题/插件 chips 过滤；不再展示索引 URL） |
 
 要点：
 
 - **插件设置不常驻页面**：行内齿轮就地把该插件注册的 `SparkleSettingsSection` 渲染进弹窗（`components/PluginSettingsDialog.ts`，层与开闭动画复用 `.upd-*`），关闭时统一跑清理函数。
-- **category 随安装持久化**：安装时索引的 `category` 写进 `plugin.json`（主进程 `sparkleInstall`），已装列表据此归入 主题/插件/扩展；本地手装没有 category，一律归入「插件」。
+- **category 随安装持久化**：安装时索引的 `category` 写进 `plugin.json`（主进程 `sparkleInstall`），已装列表据此归入 主题/插件（旧 `extension` 安装同样按「插件」展示）；本地手装没有 category，一律归入「插件」。
 - **变量级主题的切换不在这里**：`registerTheme` 的激活入口在 设置 → 外观 → 花火面具，面板「主题」标签只管启停插件。
 
 ## Marketplace
@@ -612,18 +707,18 @@ Marketplace 是一个**静态 JSON 索引** + 主进程代下载的最小分发�
 ```json
 {
   "version": 1,
-  "updated": "2026-09-21T00:00:00Z",
+  "updated": "2026-10-21T00:00:00Z",
   "plugins": [
     {
-      "id": "die-for-you",
-      "name": "Die For You 歌词",
+      "id": "nowplaying-push",
+      "name": "NowPlaying 推送",
       "version": "1.0.0",
       "minHostVersion": "1.4.0",
       "allowBeta": true,
-      "author": "quaver",
-      "description": "设置页随机展示《Die For You》歌词",
+      "author": "Team Quaver",
+      "description": "切歌时把当前播放信息推送到 Discord 或通用 JSON Webhook",
       "category": "plugin",
-      "download": "https://quaver.0w0.red/sparkle/plugins/die-for-you.js",
+      "download": "https://quaver.0w0.red/sparkle/plugins/nowplaying-push.js",
       "homepage": "https://github.com/…",
       "hash": "<sha256 hex，可选>"
     }
@@ -632,12 +727,13 @@ Marketplace 是一个**静态 JSON 索引** + 主进程代下载的最小分发�
 ```
 
 - `download` 必须直指**单文件 ESM .js**（default export 插件对象），v1 不做 zip 分发。
-- `hash` 存在时主进程下载后校验 sha256，不匹配拒绝落盘。
+- `hash` 存在时主进程下载后校验 sha256，不匹配拒绝落盘；它只防运输损坏，不构成签名或恶意代码校验。
 - `minHostVersion` 可选，插件要求的最低宿主版本（SemVer）；当前宿主低于它时拒绝安装。`allowBeta` 可选布尔（缺省 `false`），为 `true` 时额外放行「同一 `x.y.z` 的 Beta 宿主」；`nightly` 构建一律视为满足最低版本。
-- `category` 是设置页分类（`theme` / `plugin` / `extension`），缺省或未知值按 `plugin` 归档。
-- 索引源固定为 `market/default-index.ts` 的 `DEFAULT_MARKET_URL`（`https://quaver.0w0.red/marketplace.json`），设置页只读展示 + 刷新，不可更改（早期版本的 `quaver.sparkle.market.url.v1` 覆盖已废弃）。
+- `category` 是设置页分类：`theme`（主题）/ `plugin`（插件）；缺省、未知值与旧 `extension` 一律按 `plugin` 归档（「扩展」标签已撤，历史安装照常显示在「插件」里）。
+- 索引源固定为 `market/default-index.ts` 的 `DEFAULT_MARKET_URL`（`https://quaver.0w0.red/marketplace.json`），UI 内不可更改；设置页不再展示索引链接，只保留刷新与「添加本地插件」入口（早期版本的 `quaver.sparkle.market.url.v1` 覆盖已废弃）。
 - 安装成功后默认关闭，需在「插件」分类里手动启用；支持卸载与重新安装（重新安装即更新到最新发布版）。
-- 官方索引由 quaver-sparkle 仓库的 `marketplace/` 目录经 CI 构建发布到 quaver-doc 站点（详见 quaver-sparkle 的 `docs/marketplace.md` 与 `.github/workflows/marketplace.yml`）。
+- 官方索引由 quaver-sparkle 仓库的 `marketplace/` 目录经 CI 构建发布到 quaver-doc 站点；当前源码包括 Aurora、MD3（Lumen 流光，目录名 `md3/`）、Flowscape 与 NowPlaying 推送。详见 quaver-sparkle 的 `docs/marketplace.md`、`marketplace/README.md` 与 `.github/workflows/marketplace.yml`。
+- 随宿主打包的 official 插件（目前是 `plugins/die-for-you/`）不进 Marketplace 源码目录，避免 id 与安装目录撞车。
 
 ## 安全模型
 
@@ -654,25 +750,32 @@ Marketplace 是一个**静态 JSON 索引** + 主进程代下载的最小分发�
 
 ## 宿主侧实现
 
-宿主运行时在 `ui/src/sparkle/`，七个文件各司其职：
+宿主运行时在 `ui/src/sparkle/`，当前是十三个文件：
 
 | 文件 | 职责 |
 |---|---|
 | `registry.ts` | 注册表，**纯数据、零 ui 模块依赖**（shell/player/SongMenu 都要从这里读，反向 import 任何 ui 模块都会成环）。每个注册动作往对应插件 record 的 `teardown` push 反注册闭包，并 `emitChange()` 通知订阅方 |
-| `host.ts` | `SparkleContext` 工厂 + 启停生命周期 + 主题 CSS 注入 + player 门面 + 样式门面（按插件现构造，不能做成模块级单例）+ 持久化。所有会碰 ui 模块的接线都在这里 |
-| `loader.ts` | 官方插件静态表（Vite 代码分割 chunk）+ 第三方动态 import + 形状校验；`OFFICIAL_META.required` 内置必装标记与 `isSparkleRequired()`（init/host/settings 三处同读） |
-| `init.ts` | 启动：播种官方默认启用 → 逐个 enable（官方 → 第三方），不阻塞首帧 |
+| `host.ts` | `SparkleContext` 工厂 + 启停生命周期 + 主题 CSS 注入 + player 门面 + 样式门面（按插件现构造，不能做成模块级单例）+ 持久化。所有会碰 ui 模块的接线都在这里；换主题时同步重算 tint / background / menus / controlBar / playlistMode 的归属 |
+| `loader.ts` | 官方插件静态表（Vite 代码分割 chunk）+ 第三方动态 import + 形状校验；`RETIRED_OFFICIAL_IDS` 负责清理已退役的官方 id（当前为 `amll`） |
+| `init.ts` | 启动：清理退役 id → 播种官方默认启用 → 注册宿主内置歌词引擎 → 逐个 enable（官方 → 第三方），不阻塞首帧 |
 | `style-layer.ts` | 全站样式层与主题包的注入管理：层序重排（order 升序、同序按登记序，全摘重挂）、`color-scheme` 协调、孤儿包回落、总闸 suspended |
-| `np-view.ts` | 整页接管视图：`SparkleNpViewCtx` 工厂（只读闭包 + 写侧转发到 player）、音质档位表缓存、按 `enabled()` 维护挂载/卸载 |
-| `settings.ts` | 设置页「花火插件」面板：主题/插件/扩展/Marketplace 四标签（已装管理 + 主题风格选择 + 总闸 + 固定索引源 + 添加本地插件），插件设置经行内齿轮弹窗（PluginSettingsDialog） |
+| `np-view.ts` | 整页接管视图：`SparkleNpViewCtx` 工厂（只读闭包 + 写侧转发到 player）、无限电台/歌词延迟/频谱透传、音质档位表缓存、按 `enabled()` 维护挂载/卸载 |
+| `settings.ts` | 设置页「花火插件」面板：主题/插件/Marketplace 三标签（已装管理 + 主题风格选择 + 总闸 + 添加本地插件），插件设置经行内齿轮弹窗（PluginSettingsDialog） |
+| `policy.ts` | 安全模式与黑名单的统一判定 `sparkBlockReason`，启动路径与运行期手动开关共用 |
+| `theme-tint.ts` | 高亮色归属、主题 preset 校验与系统强调色 / 封面主色解析 |
+| `theme-background.ts` | 背景归属与宿主环境色让位 |
+| `theme-menus.ts` | 浮层菜单玻璃归属与让位 |
+| `theme-control-bar.ts` | 播放控制条停靠形态归属 |
+| `theme-playlist-mode.ts` | 歌单显示模式归属 |
 
-宿主消费点：`shell.ts`（路由回落 `views[path] ?? sparkleViewAt(path) ?? views["/"]`、侧栏 nav 与歌单分组）、`player.ts`（播放源链、歌词解析）、`NowPlaying.ts`（歌词渲染、部件插槽、接管态下的 `body.np-takeover`）、`SongMenu.ts`（菜单项、toast）、`views.ts`（花火插件 tab、外观面板的花火面具切换）。
+宿主消费点：`shell.ts`（路由回落 `views[path] ?? sparkleViewAt(path) ?? views["/"]`、侧栏 nav 与歌单分组）、`player.ts`（播放源链、歌词解析、频谱桥）、`NowPlaying.ts`（歌词渲染、部件插槽、接管态下的 `body.np-takeover`、频谱槽与形态切换）、`SongMenu.ts`（菜单项、toast）、`views.ts`（花火插件 tab、外观面板的花火面具切换）。
 
 守护与变更流程：
 
 - `pnpm verify:sparkle`（含在 `verify:static` 链里）对「SDK 导出 ↔ 宿主接线 ↔ 双侧 HTTP 路由」做源码级静态断言，改契约前后跑一遍；
 - SDK/官方插件变更：在 quaver-sparkle 仓库提交 → 主仓库 `git add vendor/Sparkle` 固定版本；
-- 新增官方插件要同时改 `loader.ts` 的 `OFFICIAL_META` 与 `OFFICIAL_LOADERS`（meta 表是展示真相，加载表有 loader 才能启）；要做成**不可停用**的内置必装插件，在 meta 上写 `required: true`，设置页开关即锁死、`disableSparklePlugin` 即拒绝。
+- 新增官方插件要同时改 `loader.ts` 的 `OFFICIAL_META` 与 `OFFICIAL_LOADERS`（meta 表是展示真相，加载表有 loader 才能启）；撤下官方插件时从两表移除，并把 id 加进 `RETIRED_OFFICIAL_IDS`，让启动清账。
+- 新增 SDK 扩展点时，先改 `vendor/Sparkle/sdk/types.ts` 与 `SparkleContext`，再接宿主注册表 / `host.ts` / 对应消费点，最后补 `verify:sparkle` 的静态断言。
 
 ## localStorage 键一览
 
