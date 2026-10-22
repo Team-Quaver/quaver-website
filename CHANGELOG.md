@@ -1,5 +1,26 @@
 # 更新日志
 
+## v1.6.2
+
+![Version](./images/1-6/162.webp)
+
+该版本修复了 1.6.1 以来遇到的问题，且修复因为 eMudhra/emSign 严重的 CA 问题引发的一系列可能未来会被利用的安全漏洞，由于我们存在 WebDAV 连接机制，故我们需要进行本次安全更新，我们强烈所有非龙芯用户更新这个版本。
+
+### 安全
+
+- Golang 后端技术栈版本至 1.27.3，以修复 CVE-2026-111943 
+- Node.JS 更新至 24.22.1，以修复包含远程代码执行 (RCE) 漏洞在内的多个高危漏洞修复
+- Electron 更新至 44.9.3 版本，以修复 eMudhra CA 产生的一系列问题（龙芯除外，我们正在持续查阅上游 `loongson/electron` 或 `darkyzhou/electron-loong64` 是否更新）
+
+### 修复
+
+- 修复了关闭桌面歌词单行居中失效的问题
+- 歌词辅助行存在 // 问题，修复设置桌面歌词调节的 accent
+
+### 其他依赖更新
+
+- 我们已将龙芯 Electron 从 `loongson/electron` 切换至 `darkyzhou/electron-loong64` 
+
 ## v1.6.1
 
 ![Version](./images/1-6/161.webp)
