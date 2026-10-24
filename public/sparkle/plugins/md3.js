@@ -261,7 +261,7 @@ var p=a=>a;var r=(a,e,n)=>n===void 0?{tone:a,chroma:e}:{tone:a,chroma:e,hueShift
       --amll-lp-hover-bg-color: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
       text-shadow: none;
     }
-    & .np-kara-host .amll-lyric-player { mix-blend-mode: normal; }
+    & .np-kara-host .amll-lyric-player { mix-blend-mode: plus-lighter; }
     /* AMLL \u7684\u300C\u672A\u5531 = \u66F4\u4F4E alpha\u300D\u300C\u8F85\u52A9\u884C = opacity .3\u300D\u540C\u6837\u662F\u81EA\u53D1\u5149\u601D\u8DEF\uFF1A\u53EA\u51CF\u5149\u3001\u4E0D\u964D\u8272\u3002
        \u6DF1\u8272\u5E95\u4E0A\u8FD8\u80FD\u8BFB\uFF0C\u6D45\u8272\u5E95\u4E0A\u76F4\u63A5\u6389\u5230\u53EF\u8BFB\u6027\u4EE5\u4E0B \u2014\u2014 \u800C\u672A\u5531\u90A3\u534A\u53E5\u548C\u7FFB\u8BD1\u884C\u6070\u6070\u662F\u9010\u5B57\u6B4C\u8BCD\u8981\u8BFB
        \u7684\u5185\u5BB9\uFF0C\u4E8E\u662F\u628A\u6D53\u5EA6\u62AC\u5230\u6D45\u8272\u4E5F\u7AD9\u5F97\u4F4F\u7684\u4E00\u6863\uFF08\u672A\u5531 .4 \u2192 .65\uFF0C\u8F85\u52A9\u884C .3 \u2192 .7\uFF09\u3002
