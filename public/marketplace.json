@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-10-24T03:56:27.226Z",
+  "updated": "2026-10-24T06:28:45.732Z",
   "plugins": [
     {
       "id": "aurora",
@@ -16,25 +16,27 @@
     {
       "id": "flowscape",
       "name": "Flowscape 流境",
-      "version": "1.7.0",
+      "version": "1.7.1",
+      "minHostVersion": "1.7.0",
+      "allowBeta": true,
       "author": "Team Quaver",
       "description": "一个复刻移动听歌史上最经典的播放页模式的插件",
       "category": "plugin",
       "download": "https://quaver.0w0.red/sparkle/plugins/flowscape.js",
       "homepage": "https://github.com/Team-Quaver/quaver-sparkle",
-      "hash": "89be1a3ae21892734b9ba96324711465c6768934168257d6bb7e933d74ec7fa1"
+      "hash": "b92c06f9129ad9448a36653367e56fcd77a1c7cd466a894f1f5cacede5e3034a"
     },
     {
       "id": "md3",
       "name": "Lumen 流光",
-      "version": "1.3.8",
-      "minHostVersion": "1.4.1",
+      "version": "1.3.9",
+      "minHostVersion": "1.7.0",
       "allowBeta": true,
       "author": "Team Quaver",
       "description": "一款复刻 Material You 设计的主题；高亮方案含「系统强调色」（Noctalia / matugen / KDE / GNOME）",
       "category": "theme",
       "download": "https://quaver.0w0.red/sparkle/plugins/md3.js",
-      "hash": "4c36e5fddc74c71e8fa98b9140959222dde3b1f5dd2f8c05c39eab5db017845d"
+      "hash": "97ee8ee7fe579e5dc7550d3cb4da25ee1199ff7a077ac5a695cd447cafe095de"
     },
     {
       "id": "nowplaying-push",
