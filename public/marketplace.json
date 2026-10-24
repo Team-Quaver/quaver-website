@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-10-23T14:50:01.261Z",
+  "updated": "2026-10-24T03:56:27.226Z",
   "plugins": [
     {
       "id": "aurora",
@@ -34,7 +34,7 @@
       "description": "一款复刻 Material You 设计的主题；高亮方案含「系统强调色」（Noctalia / matugen / KDE / GNOME）",
       "category": "theme",
       "download": "https://quaver.0w0.red/sparkle/plugins/md3.js",
-      "hash": "f50c2cdc12402c03c4afc00115741e5e2f22433243fbb69893a0e01ba22cac7e"
+      "hash": "4c36e5fddc74c71e8fa98b9140959222dde3b1f5dd2f8c05c39eab5db017845d"
     },
     {
       "id": "nowplaying-push",

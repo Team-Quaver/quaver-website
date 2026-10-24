@@ -1,6 +1,6 @@
-var u=e=>e;var r=(e,a,n)=>n===void 0?{tone:e,chroma:a}:{tone:e,chroma:a,hueShift:n},k={primary:r(40,50),"on-primary":r(100,0),"primary-container":r(90,18),"on-primary-container":r(10,59),"secondary-container":r(90,13),"on-secondary-container":r(10,13),tertiary:r(40,20,60),"on-tertiary":r(100,0,60),"tertiary-container":r(90,15,60),"on-tertiary-container":r(10,18,60),surface:r(98,5),"surface-container-low":r(96,4),"surface-container":r(94,5),"surface-container-high":r(92,5),"surface-container-highest":r(90,5),"on-surface":r(10,4),"on-surface-variant":r(30,6),outline:r(50,6),"outline-variant":r(80,6),"inverse-surface":r(20,4),"inverse-on-surface":r(95,4),error:{fixed:"#b3261e"},"on-error":{fixed:"#ffffff"},"error-container":{fixed:"#ffdad6"},"on-error-container":{fixed:"#410002"}},w={primary:r(80,35),"on-primary":r(20,54),"primary-container":r(30,52),"on-primary-container":r(90,18),"secondary-container":r(30,13),"on-secondary-container":r(90,13),tertiary:r(80,22,60),"on-tertiary":r(20,19,60),"tertiary-container":r(30,20,60),"on-tertiary-container":r(90,15,60),surface:r(6,4),"surface-container-low":r(10,4),"surface-container":r(12,5),"surface-container-high":r(17,5),"surface-container-highest":r(22,5),"on-surface":r(90,5),"on-surface-variant":r(80,6),outline:r(60,6),"outline-variant":r(30,6),"inverse-surface":r(90,5),"inverse-on-surface":r(20,4),error:{fixed:"#ffb4ab"},"on-error":{fixed:"#690005"},"error-container":{fixed:"#93000a"},"on-error-container":{fixed:"#ffdad6"}},b=[{id:"md3-purple",label:"\u7D2B\u7F57\u5170",color:"#6750a4"},{id:"md3-blue",label:"\u975B\u84DD",color:"#0b57d0"},{id:"md3-teal",label:"\u9752\u78A7",color:"#00696d"},{id:"md3-green",label:"\u7FE0\u7EFF",color:"#2e7d32"},{id:"md3-amber",label:"\u7425\u73C0",color:"#8a5100"},{id:"md3-red",label:"\u6731\u7EA2",color:"#b3261e"},{id:"md3-magenta",label:"\u54C1\u7EA2",color:"#8e4585"},{id:"md3-system",label:"\u7CFB\u7EDF\u5F3A\u8C03\u8272",color:"system"},{id:"md3-cover",label:"\u5C01\u9762\u989C\u8272",color:"cover"}],h={none:"0",xs:"4px",s:"8px",m:"12px",l:"16px",xl:"28px",full:"999px"},i=(e,a,n)=>`lch(from var(--md-source) ${e} ${a} h / ${n})`,f={light:{contact:i(20,8,.3),ambient:i(30,10,.15)},dark:{contact:i(0,0,.35),ambient:i(32,42,.5)}},E={1:["0 1px 2px","0 1px 3px 1px"],2:["0 1px 2px","0 2px 6px 2px"],3:["0 1px 3px","0 4px 8px 3px"],4:["0 2px 3px","0 6px 10px 4px"],5:["0 4px 4px","0 8px 12px 6px"]},v=(e,a)=>{let[n,s]=E[a];return`${n} ${f[e].contact}, ${s} ${f[e].ambient}`},d={light:Object.fromEntries([1,2,3,4,5].map(e=>[e,v("light",e)])),dark:Object.fromEntries([1,2,3,4,5].map(e=>[e,v("dark",e)]))},l={light:`0 20px 60px ${i(24,12,.4)}, 0 6px 18px ${i(18,10,.3)}`,dark:`0 20px 60px ${i(34,46,.55)}, 0 6px 18px ${i(26,36,.5)}`},g={hover:.08,focus:.1,pressed:.1,drag:.16},M={light:k,dark:w};function S(e){if("fixed"in e)return e.fixed;let a=e.hueShift===void 0?"h":`calc(h + ${e.hueShift})`;return`lch(from var(--md-source) ${e.tone} ${e.chroma} ${a})`}var $=e=>`--md-${e}`;function x(e){return Object.entries(M[e]).map(([a,n])=>`${$(a)}:${S(n)};`)}var T="var(--cvg-bar-line, #6750a4)";function y(e,a){let n=x(e).map(t=>`${a}${t}`),s=Object.entries(d[e]).map(([t,c])=>`${a}--md-elev-${t}: ${c};`);return[...n,...s,`${a}--md-elev-cover: ${l[e]};`].join(`
-`)}var O=[...Object.entries(h).map(([e,a])=>`  --md-shape-${e}: ${a};`),...Object.entries(g).map(([e,a])=>`  --md-state-${e}: ${a};`)].join(`
-`),L=`
+var p=a=>a;var r=(a,e,n)=>n===void 0?{tone:a,chroma:e}:{tone:a,chroma:e,hueShift:n},x={primary:r(40,50),"on-primary":r(100,0),"primary-container":r(90,18),"on-primary-container":r(10,59),"secondary-container":r(90,13),"on-secondary-container":r(10,13),tertiary:r(40,20,60),"on-tertiary":r(100,0,60),"tertiary-container":r(90,15,60),"on-tertiary-container":r(10,18,60),surface:r(98,5),"surface-container-low":r(96,4),"surface-container":r(94,5),"surface-container-high":r(92,5),"surface-container-highest":r(90,5),"on-surface":r(10,4),"on-surface-variant":r(30,6),outline:r(50,6),"outline-variant":r(80,6),"inverse-surface":r(20,4),"inverse-on-surface":r(95,4),error:{fixed:"#b3261e"},"on-error":{fixed:"#ffffff"},"error-container":{fixed:"#ffdad6"},"on-error-container":{fixed:"#410002"}},y={primary:r(80,35),"on-primary":r(20,54),"primary-container":r(30,52),"on-primary-container":r(90,18),"secondary-container":r(30,13),"on-secondary-container":r(90,13),tertiary:r(80,22,60),"on-tertiary":r(20,19,60),"tertiary-container":r(30,20,60),"on-tertiary-container":r(90,15,60),surface:r(6,4),"surface-container-low":r(10,4),"surface-container":r(12,5),"surface-container-high":r(17,5),"surface-container-highest":r(22,5),"on-surface":r(90,5),"on-surface-variant":r(80,6),outline:r(60,6),"outline-variant":r(30,6),"inverse-surface":r(90,5),"inverse-on-surface":r(20,4),error:{fixed:"#ffb4ab"},"on-error":{fixed:"#690005"},"error-container":{fixed:"#93000a"},"on-error-container":{fixed:"#ffdad6"}},m=[{id:"md3-purple",label:"\u7D2B\u7F57\u5170",color:"#6750a4"},{id:"md3-blue",label:"\u975B\u84DD",color:"#0b57d0"},{id:"md3-teal",label:"\u9752\u78A7",color:"#00696d"},{id:"md3-green",label:"\u7FE0\u7EFF",color:"#2e7d32"},{id:"md3-amber",label:"\u7425\u73C0",color:"#8a5100"},{id:"md3-red",label:"\u6731\u7EA2",color:"#b3261e"},{id:"md3-magenta",label:"\u54C1\u7EA2",color:"#8e4585"},{id:"md3-system",label:"\u7CFB\u7EDF\u5F3A\u8C03\u8272",color:"system"},{id:"md3-cover",label:"\u5C01\u9762\u989C\u8272",color:"cover"},{id:"md3-custom",label:"\u81EA\u5B9A\u4E49\u989C\u8272",color:"custom"}],u={none:"0",xs:"4px",s:"8px",m:"12px",l:"16px",xl:"28px",full:"999px"},o=(a,e,n)=>`lch(from var(--md-source) ${a} ${e} h / ${n})`,d={light:{contact:o(20,8,.3),ambient:o(30,10,.15)},dark:{contact:o(0,0,.35),ambient:o(32,42,.5)}},k={1:["0 1px 2px","0 1px 3px 1px"],2:["0 1px 2px","0 2px 6px 2px"],3:["0 1px 3px","0 4px 8px 3px"],4:["0 2px 3px","0 6px 10px 4px"],5:["0 4px 4px","0 8px 12px 6px"]},l=(a,e)=>{let[n,t]=k[e];return`${n} ${d[a].contact}, ${t} ${d[a].ambient}`},f={light:Object.fromEntries([1,2,3,4,5].map(a=>[a,l("light",a)])),dark:Object.fromEntries([1,2,3,4,5].map(a=>[a,l("dark",a)]))},v={light:`0 20px 60px ${o(24,12,.4)}, 0 6px 18px ${o(18,10,.3)}`,dark:`0 20px 60px ${o(34,46,.55)}, 0 6px 18px ${o(26,36,.5)}`},b={hover:.08,focus:.1,pressed:.1,drag:.16},w={light:x,dark:y};function E(a){if("fixed"in a)return a.fixed;let e=a.hueShift===void 0?"h":`calc(h + ${a.hueShift})`;return`lch(from var(--md-source) ${a.tone} ${a.chroma} ${e})`}var S=a=>`--md-${a}`;function h(a){return Object.entries(w[a]).map(([e,n])=>`${S(e)}:${E(n)};`)}var M="var(--cvg-bar-line, #6750a4)";function g(a,e){let n=h(a).map(i=>`${e}${i}`),t=Object.entries(f[a]).map(([i,c])=>`${e}--md-elev-${i}: ${c};`);return[...n,...t,`${e}--md-elev-cover: ${v[a]};`].join(`
+`)}var $=[...Object.entries(u).map(([a,e])=>`  --md-shape-${a}: ${e};`),...Object.entries(b).map(([a,e])=>`  --md-state-${a}: ${e};`)].join(`
+`),T=`
   --bg: var(--md-surface);
   --card: var(--md-surface-container-low);
   --side: var(--md-surface-container);
@@ -32,13 +32,13 @@ var u=e=>e;var r=(e,a,n)=>n===void 0?{tone:e,chroma:a}:{tone:e,chroma:a,hueShift
   /* \u5F3A\u8C03\u8272\uFF1A\u7EAF var(--acc) \u7684\u6D88\u8D39\u70B9\uFF08\u8BBE\u7F6E\u9875\u9009\u4E2D\u5361 / \u66F4\u65B0\u6309\u94AE / \u8FDB\u5EA6\u6761\u2026\uFF09\u8DDF\u7740 M3 \u4E3B\u8272\u8D70 */
   --acc: var(--md-primary);
   --cyan: var(--md-tertiary);
-`,q=`
+`,O=`
   --menu-filter: none;
   --menu-surface: var(--md-surface-container-high);
   --menu-line: var(--md-outline-variant);
   --menu-shadow: var(--md-elev-2);
   --menu-edge: transparent;
-`,R=`
+`,L=`
   /* ===== \u2460 \u6EE1\u5E45\uFF1A\u53BB\u6389\u6D6E\u52A8\u9762\u677F\u4E0E\u73BB\u7483 ===== */
   & .body { padding: 0; gap: 0; }
   /* .side-resizer \u672C\u6765\u7528 margin:0 -10px \u53BB\u300C\u5403\u6389\u300D.body \u90A3 10px \u95F4\u8DDD\uFF1B\u95F4\u8DDD\u5F52\u96F6\u540E\u5B83\u4F1A\u76D6\u4F4F
@@ -192,7 +192,7 @@ var u=e=>e;var r=(e,a,n)=>n===void 0?{tone:e,chroma:a}:{tone:e,chroma:a,hueShift
     --menu-surface: lch(from var(--md-source) 17 5 h);
     --menu-line: rgba(255, 255, 255, .16);
   }
-`,N=`
+`,q=`
   &[data-md3-np="on"] .np {
     background: var(--md-surface);
     /* \u5C01\u9762\u6C1B\u56F4\u5C42\u53EA\u670D\u52A1\u539F\u6765\u7684\u6DF1\u8272\u73BB\u7483\uFF1B\u63A5\u7BA1\u540E\u5173\u6389\u5B83\uFF0C\u907F\u514D M3 \u8868\u9762\u5E95\u4E0B\u6F0F\u51FA\u968F\u673A\u5C01\u9762\u8272 */
@@ -239,8 +239,8 @@ var u=e=>e;var r=(e,a,n)=>n===void 0?{tone:e,chroma:a}:{tone:e,chroma:a,hueShift
     & .fs-qi:hover, & .fs-mrow:hover { color: var(--md-on-surface); background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
   }
 
-  /* \u989C\u8272\u6863\u4F4D = \u968F\u4E3B\u9898\u8BBE\u7F6E\uFF1AM3 surface \u672C\u8EAB\u5DF2\u5E26\u660E\u6697\u4E24\u5957\u89D2\u8272 */
-  &[data-md3-np="on"][data-md3-np-color="theme"] .np {
+  /* \u989C\u8272\u56FA\u5B9A = \u968F\u4E3B\u9898\u8BBE\u7F6E\uFF1AM3 surface \u672C\u8EAB\u5DF2\u5E26\u660E\u6697\u4E24\u5957\u89D2\u8272 */
+  &[data-md3-np="on"] .np {
     background: var(--md-surface);
 
     /* \u2014\u2014 \u9010\u5B57\u6B4C\u8BCD\uFF08\u5185\u7F6E AMLL\uFF09\u5728\u8FD9\u4E00\u6863 surface \u4E0A\u5FC5\u987B\u6574\u4F53\u7FFB\u9762 \u2014\u2014
@@ -301,68 +301,33 @@ var u=e=>e;var r=(e,a,n)=>n===void 0?{tone:e,chroma:a}:{tone:e,chroma:a,hueShift
     & .np-cover { background: var(--md-surface-container-high); color: var(--md-on-surface-variant); }
   }
 
-  /* \u989C\u8272\u6863\u4F4D = \u6DF1\u7A7A\u9ED1\uFF1A\u548C\u5C01\u9762\u6C1B\u56F4\u5F7B\u5E95\u8131\u94A9\uFF0C\u4FDD\u7559\u63A5\u7BA1\u6001\u539F\u6709\u767D\u5B57\u7684\u53EF\u8BFB\u6027 */
-  &[data-md3-np="on"][data-md3-np-color="deep"] .np {
-    background: #000;
-    & .np-scrim { background: #000; }
-    /* \u6DF1\u7A7A\u9ED1\u72EC\u7ACB\u4E8E\u5E94\u7528\u660E\u6697\uFF1A\u56DE\u5230 Flowscape \u7684\u4EAE\u5B57\u4E0E\u67D4\u9634\u5F71\u9ED8\u8BA4\u503C\u3002 */
-    --fs-lyric-color: initial;
-    --fs-lyric-unsung: initial;
-    --fs-lyric-highlight: initial;
-    --fs-lyric-shadow: initial;
-    --fs-lyric-filter: initial;
-    --fs-lyric-translation-shadow: initial;
-    /* deep \u6863\u628A on \u5757\u6362\u6389\u7684\u83DC\u5355\u8868\u9762\u518D\u62FF\u56DE\u300C\u6052\u6DF1\u8272\u300D\u90A3\u4E00\u7248 */
-    --menu-surface: #10131c;
-    --menu-line: rgba(255, 255, 255, .16);
-    /* \u9ED1\u5E95\u4E0A\u300C\u6BD4\u9ED1\u66F4\u9ED1\u300D\u7684\u6295\u5F71\u6CA1\u6709\u4FE1\u606F \u2014\u2014 \u8FD9\u4E00\u6001\u7684\u9875\u9762\u4E0E\u5E94\u7528\u660E\u6697\u65E0\u5173\uFF0C\u6240\u4EE5\u6295\u5F71\u4EE4\u724C
-       \u6052\u53D6\u6DF1\u8272\u90A3\u4E00\u7EC4\uFF08\u6D45\u8272\u65B9\u6848\u53D1\u7684\u90A3\u7EC4\u662F\u8FD1\u9ED1\uFF0C\u843D\u5728 #000 \u4E0A\u7B49\u4E8E\u6CA1\u753B\uFF09\u3002 */
-    --md-elev-cover: ${l.dark};
-    --menu-shadow: ${d.dark[2]};
-    & .np-title, & .np-ly-line, & .np-ly-line.cur { color: #fff; }
-    & .np-artist { color: #ffffffb8; }
-    & .np-ly-empty { color: #ffffff80; }
-    & .np-menu-item, & .np-menu-switch, & .np-menu-size, & .np-menu-size button { color: #ffffffe6; }
-    & .np-menu-empty, & .np-size-val { color: #ffffff8c; }
-    & .np-menu-item:hover:not(:disabled),
-    & .np-menu-switch:hover,
-    & .np-menu-size:hover,
-    & .np-menu-size button:hover:not(:disabled) {
-      color: #fff;
-      background: #ffffff1f;
-    }
-    & .fs-title { color: #fff; }
-    & .fs-artist { color: #ffffffcc; }
-    & .fs-album { color: #ffffff8f; }
-    & .fs-ly-empty { color: #ffffff7a; }
-  }
-`;function C(){return`
-  /* ===== Material Design 3 \xB7 \u4EE4\u724C =====
+`;function R(){return`
+  /* ===== Lumen \u6D41\u5149 \xB7 \u4EE4\u724C =====
      \u6E90\u8272 = \u5BBF\u4E3B\u6309\u672C\u4E3B\u9898 Tint \u65B9\u6848\u5199\u4E0B\u7684\u67D3\u8272\uFF08\u89C1\u6587\u4EF6\u9876\u90E8\u7684\u201C\u4E3A\u4EC0\u4E48\u4E0D\u7528 --cvg-accent\u201D\uFF09 */
-  --md-source: ${T};
+  --md-source: ${M};
 
-${y("light","  ")}
+${g("light","  ")}
 
-${O}
+${$}
 
-${L}
+${T}
 
   /* \u83DC\u5355\u63A5\u7BA1\uFF08\u4E0D\u58F0\u660E menus\uFF09\uFF1A\u5347\u4E00\u7EA7\u7279\u5F02\u6027\uFF0C\u6697\u8272\u538B\u8FC7\u5BBF\u4E3B\u7684 html[data-theme="dark"] */
   &[data-theme] {
-${q}
+${O}
   }
 
   /* ===== \u6697\u8272\u65B9\u6848\uFF1A\u53EA\u6362\u89D2\u8272\u503C\uFF0C\u6620\u5C04\u4E0E\u7EC4\u4EF6\u89C4\u5219\u81EA\u7136\u8DDF\u968F ===== */
   &[data-theme="dark"] {
-${y("dark","    ")}
+${g("dark","    ")}
   }
 
   /* ===== \u7EC4\u4EF6\u5F62\u6001 ===== */
-${R}
+${L}
 
   /* ===== \u6B63\u5728\u64AD\u653E / Flowscape \u63A5\u7BA1 ===== */
-${N}
-`}var H=u({id:"md3",name:"Lumen \u6D41\u5149",version:"1.3.8",minHostVersion:"1.4.1",allowBeta:!0,kind:"third-party",author:"Team Quaver",description:"\u4E00\u6B3E\u590D\u523B Material You \u8BBE\u8BA1\u7684\u4E3B\u9898\u63D2\u4EF6",setup(e){let a=()=>e.storage.get("np")!=="off",n=()=>e.storage.get("npColor")==="deep"?"deep":"theme",s=()=>{typeof document>"u"||(document.documentElement.dataset.md3Np=a()?"on":"off",document.documentElement.dataset.md3NpColor=n())};s(),e.registerTheme({id:"md3",name:"Material Design 3",css:C(),tint:{mode:"presets",presets:b},controlBar:{mode:"bottom"},playlistMode:{mode:"collection"}}),e.registerSettingsSection({id:"md3-theme",title:"\u4E3B\u9898\u8BBE\u7F6E",render(t){t.innerHTML=`
+${q}
+`}var _=p({id:"md3",name:"Lumen \u6D41\u5149",version:"1.3.8",minHostVersion:"1.4.1",allowBeta:!0,kind:"third-party",author:"Team Quaver",description:"\u4E00\u6B3E\u590D\u523B Material You \u8BBE\u8BA1\u7684\u4E3B\u9898\u63D2\u4EF6",setup(a){let e=()=>a.storage.get("np")!=="off",n=()=>{typeof document>"u"||(document.documentElement.dataset.md3Np=e()?"on":"off",document.documentElement.dataset.md3NpColor="theme")};n(),a.registerTheme({id:"md3",name:"Lumen \u6D41\u5149",css:R(),tint:{mode:"presets",presets:m},controlBar:{mode:"bottom"},playlistMode:{mode:"collection"}}),a.registerSettingsSection({id:"md3-theme",title:"\u4E3B\u9898\u8BBE\u7F6E",render(t){t.innerHTML=`
           <div class="set-label">\u662F\u5426\u4ECB\u5165\u6B63\u5728\u64AD\u653E\u9875/Flowscape</div>
           <div class="opt-cards">
             <button class="opt-card" data-np="on" type="button">\u5F00\u542F</button>
@@ -370,15 +335,10 @@ ${N}
           </div>
           <p class="muted set-hint">\u5F00\u542F\u540E Lumen \u4F1A\u7EDF\u4E00\u6B63\u5728\u64AD\u653E\u9875\u4E0E Flowscape \u7684\u8868\u9762\u8272\uFF1B\u5173\u95ED\u65F6\u4FDD\u7559\u5B83\u4EEC\u539F\u6709\u7684\u6DF1\u8272\u5C01\u9762\u6C1B\u56F4\u3002</p>
 
-          <div class="set-label" style="margin-top:14px">\u6B63\u5728\u64AD\u653E\u9875/Flowscape \u989C\u8272</div>
-          <div class="opt-cards">
-            <button class="opt-card" data-np-color="theme" type="button">\u968F\u4E3B\u9898\u8BBE\u7F6E</button>
-            <button class="opt-card" data-np-color="deep" type="button">\u6DF1\u7A7A\u9ED1</button>
-          </div>
-          <p class="muted set-hint">\u300C\u968F\u4E3B\u9898\u8BBE\u7F6E\u300D\u4F7F\u7528\u5F53\u524D Lumen \u660E\u6697\u65B9\u6848\u7684 M3 \u8868\u9762\uFF1B\u300C\u6DF1\u7A7A\u9ED1\u300D\u4F7F\u7528\u7EAF\u9ED1\u5E95\u8272\u3002</p>
+          <p class="muted set-hint" style="margin-top:10px">\u63A5\u7BA1\u540E\u6B63\u5728\u64AD\u653E\u9875\u4E0E Flowscape \u4F7F\u7528\u5F53\u524D Lumen \u660E\u6697\u65B9\u6848\u7684 M3 \u8868\u9762\u3002</p>
 
           <div class="set-label" style="margin-top:14px">\u6B4C\u5355\u663E\u793A</div>
           <div class="opt-cards">
             <button class="opt-card sel" data-pl-mode="collection" type="button" disabled>\u6B4C\u5355\u96C6\u5408\u9875\uFF08Lumen \u5F3A\u5236\uFF09</button>
           </div>
-          <p class="muted set-hint">Lumen \u628A\u4FA7\u680F\u8BA9\u7ED9\u5BFC\u822A\uFF1A\u6B4C\u5355\u4E0D\u5728\u4FA7\u680F\u5217\u51FA\uFF0C\u6539\u5230\u300C\u6B4C\u5355\u300D\u96C6\u5408\u9875\u4EE5 grid \u5206\u533A\u5C55\u793A\u3002\u8BBE\u7F6E \u2192 \u5916\u89C2 \u2192 \u6B4C\u5355 \u7531\u4E3B\u9898\u63A5\u7BA1\u3001\u81EA\u52A8\u7981\u7528\u3002</p>`;let c=[...t.querySelectorAll("[data-np]")],m=[...t.querySelectorAll("[data-np-color]")],p=()=>{c.forEach(o=>o.classList.toggle("sel",o.dataset.np==="on"===a())),m.forEach(o=>o.classList.toggle("sel",o.dataset.npColor===n()))};c.forEach(o=>{o.onclick=()=>{e.storage.set("np",o.dataset.np==="on"?"on":"off"),s(),p()}}),m.forEach(o=>{o.onclick=()=>{e.storage.set("npColor",o.dataset.npColor==="deep"?"deep":"theme"),s(),p()}}),p()}})}});export{H as default};
+          <p class="muted set-hint">Lumen \u628A\u4FA7\u680F\u8BA9\u7ED9\u5BFC\u822A\uFF1A\u6B4C\u5355\u4E0D\u5728\u4FA7\u680F\u5217\u51FA\uFF0C\u6539\u5230\u300C\u6B4C\u5355\u300D\u96C6\u5408\u9875\u4EE5 grid \u5206\u533A\u5C55\u793A\u3002\u8BBE\u7F6E \u2192 \u5916\u89C2 \u2192 \u6B4C\u5355 \u7531\u4E3B\u9898\u63A5\u7BA1\u3001\u81EA\u52A8\u7981\u7528\u3002</p>`;let i=[...t.querySelectorAll("[data-np]")],c=()=>{i.forEach(s=>s.classList.toggle("sel",s.dataset.np==="on"===e()))};i.forEach(s=>{s.onclick=()=>{a.storage.set("np",s.dataset.np==="on"?"on":"off"),n(),c()}}),c()}})}});export{_ as default};
