@@ -179,7 +179,7 @@ var p=a=>a;var r=(a,e,n)=>n===void 0?{tone:a,chroma:e}:{tone:a,chroma:e,hueShift
   & .tint-field input, & .tint-hex-row input, & .qp-q { border-radius: var(--md-shape-xs); }
 
   /* \u2014\u2014 \u6D6E\u5C42\uFF1AM3 \u83DC\u5355 4px \u2014\u2014 */
-  & .ctx-menu, & .pb-qpop, & .pb-lpop, & .pb-volpop, & .np-menu, & .np-menu-sub-list, & .np-qinfo, & .tint-pop { border-radius: var(--md-shape-xs); }
+  & .ctx-menu, & .qtip, & .pb-qpop, & .pb-lpop, & .pb-volpop, & .np-menu, & .np-menu-sub-list, & .np-qinfo, & .tint-pop { border-radius: var(--md-shape-xs); }
 
   /* \u2014\u2014 \u5BF9\u8BDD\u6846 / \u63D0\u793A\u6761 \u2014\u2014 */
   & .upd-dialog, & .sparkle-settings-dialog { border-radius: var(--md-shape-xl); box-shadow: var(--md-elev-3); }
@@ -328,13 +328,13 @@ ${L}
 
   /* ===== \u6B63\u5728\u64AD\u653E / Flowscape \u63A5\u7BA1 ===== */
 ${q}
-`}var _=p({id:"md3",name:"Lumen \u6D41\u5149",version:"1.3.9",minHostVersion:"1.7.0",allowBeta:!0,kind:"third-party",author:"Team Quaver",description:"\u4E00\u6B3E\u590D\u523B Material You \u8BBE\u8BA1\u7684\u4E3B\u9898\u63D2\u4EF6",setup(a){let e=()=>a.storage.get("np")!=="off",n=()=>{typeof document>"u"||(document.documentElement.dataset.md3Np=e()?"on":"off",document.documentElement.dataset.md3NpColor="theme")};n(),a.registerTheme({id:"md3",name:"Lumen \u6D41\u5149",css:R(),tint:{mode:"presets",presets:m},controlBar:{mode:"bottom"},playlistMode:{mode:"collection"},background:{mode:"host",renderer:"quaver"}}),a.registerSettingsSection({id:"md3-theme",title:"\u4E3B\u9898\u8BBE\u7F6E",render(t){t.innerHTML=`
+`}var _=p({id:"md3",name:"Lumen \u6D41\u5149",version:"1.4.0",minHostVersion:"1.7.0",allowBeta:!0,kind:"third-party",author:"Team Quaver",description:"\u4E00\u6B3E\u590D\u523B Material You \u8BBE\u8BA1\u7684\u4E3B\u9898\u63D2\u4EF6",setup(a){let e=()=>a.storage.get("np")==="on",n=()=>{typeof document>"u"||(document.documentElement.dataset.md3Np=e()?"on":"off",document.documentElement.dataset.md3NpColor="theme")};n(),a.registerTheme({id:"md3",name:"Lumen \u6D41\u5149",css:R(),tint:{mode:"presets",presets:m},controlBar:{mode:"bottom"},playlistMode:{mode:"collection"},background:{mode:"host"}}),a.registerSettingsSection({id:"md3-theme",title:"\u4E3B\u9898\u8BBE\u7F6E",render(t){t.innerHTML=`
           <div class="set-label">\u662F\u5426\u4ECB\u5165\u6B63\u5728\u64AD\u653E\u9875/Flowscape</div>
           <div class="opt-cards">
             <button class="opt-card" data-np="on" type="button">\u5F00\u542F</button>
             <button class="opt-card" data-np="off" type="button">\u5173\u95ED</button>
           </div>
-          <p class="muted set-hint">\u5F00\u542F\u540E Lumen \u4F1A\u7EDF\u4E00\u6B63\u5728\u64AD\u653E\u9875\u4E0E Flowscape \u7684\u8868\u9762\u8272\uFF1B\u5173\u95ED\u65F6\u4FDD\u7559\u5B83\u4EEC\u539F\u6709\u7684\u6DF1\u8272\u5C01\u9762\u6C1B\u56F4\u3002</p>
+          <p class="muted set-hint">\u9ED8\u8BA4\u5173\u95ED\uFF0C\u4FDD\u7559\u6B63\u5728\u64AD\u653E\u9875\u4E0E Flowscape \u539F\u6709\u7684\u6DF1\u8272\u5C01\u9762\u6C1B\u56F4\uFF1B\u5F00\u542F\u540E Lumen \u4F1A\u7EDF\u4E00\u5B83\u4EEC\u7684\u8868\u9762\u8272\u3002</p>
 
           <p class="muted set-hint" style="margin-top:10px">\u63A5\u7BA1\u540E\u6B63\u5728\u64AD\u653E\u9875\u4E0E Flowscape \u4F7F\u7528\u5F53\u524D Lumen \u660E\u6697\u65B9\u6848\u7684 M3 \u8868\u9762\u3002</p>
 
