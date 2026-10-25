@@ -328,7 +328,7 @@ ${L}
 
   /* ===== \u6B63\u5728\u64AD\u653E / Flowscape \u63A5\u7BA1 ===== */
 ${q}
-`}var _=p({id:"md3",name:"Lumen \u6D41\u5149",version:"1.3.9",minHostVersion:"1.7.0",allowBeta:!0,kind:"third-party",author:"Team Quaver",description:"\u4E00\u6B3E\u590D\u523B Material You \u8BBE\u8BA1\u7684\u4E3B\u9898\u63D2\u4EF6",setup(a){let e=()=>a.storage.get("np")!=="off",n=()=>{typeof document>"u"||(document.documentElement.dataset.md3Np=e()?"on":"off",document.documentElement.dataset.md3NpColor="theme")};n(),a.registerTheme({id:"md3",name:"Lumen \u6D41\u5149",css:R(),tint:{mode:"presets",presets:m},controlBar:{mode:"bottom"},playlistMode:{mode:"collection"}}),a.registerSettingsSection({id:"md3-theme",title:"\u4E3B\u9898\u8BBE\u7F6E",render(t){t.innerHTML=`
+`}var _=p({id:"md3",name:"Lumen \u6D41\u5149",version:"1.3.9",minHostVersion:"1.7.0",allowBeta:!0,kind:"third-party",author:"Team Quaver",description:"\u4E00\u6B3E\u590D\u523B Material You \u8BBE\u8BA1\u7684\u4E3B\u9898\u63D2\u4EF6",setup(a){let e=()=>a.storage.get("np")!=="off",n=()=>{typeof document>"u"||(document.documentElement.dataset.md3Np=e()?"on":"off",document.documentElement.dataset.md3NpColor="theme")};n(),a.registerTheme({id:"md3",name:"Lumen \u6D41\u5149",css:R(),tint:{mode:"presets",presets:m},controlBar:{mode:"bottom"},playlistMode:{mode:"collection"},background:{mode:"host",renderer:"quaver"}}),a.registerSettingsSection({id:"md3-theme",title:"\u4E3B\u9898\u8BBE\u7F6E",render(t){t.innerHTML=`
           <div class="set-label">\u662F\u5426\u4ECB\u5165\u6B63\u5728\u64AD\u653E\u9875/Flowscape</div>
           <div class="opt-cards">
             <button class="opt-card" data-np="on" type="button">\u5F00\u542F</button>
