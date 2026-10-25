@@ -216,7 +216,7 @@ ${x("dark","    ")}
   /* ===== \u7EC4\u4EF6\u5F62\u6001 ===== */
 ${$}
 
-`}var V=s({id:"md3",name:"Lumen \u6D41\u5149",version:"1.5.0",minHostVersion:"1.7.0",allowBeta:!0,kind:"third-party",author:"Team Quaver",description:"\u4E00\u6B3E\u590D\u523B Material You \u8BBE\u8BA1\u7684\u4E3B\u9898\u63D2\u4EF6",setup(e){e.registerTheme({id:"md3",name:"Lumen \u6D41\u5149",css:O(),tint:{mode:"presets",presets:c},controlBar:{mode:"bottom"},playlistMode:{mode:"collection"},background:{mode:"host"}}),e.registerSettingsSection({id:"md3-theme",title:"\u4E3B\u9898\u8BBE\u7F6E",render(a){a.innerHTML=`
+`}var V=s({id:"md3",name:"Lumen \u6D41\u5149",version:"1.5.1",minHostVersion:"1.7.0",allowBeta:!0,kind:"third-party",author:"Team Quaver",description:"\u4E00\u6B3E\u590D\u523B Material You \u8BBE\u8BA1\u7684\u4E3B\u9898\u63D2\u4EF6",setup(e){e.registerTheme({id:"md3",name:"Lumen \u6D41\u5149",css:O(),tint:{mode:"presets",presets:c},controlBar:{mode:"bottom"},playlistMode:{mode:"collection"},background:{mode:"off",renderer:"quaver"}}),e.registerSettingsSection({id:"md3-theme",title:"\u4E3B\u9898\u8BBE\u7F6E",render(a){a.innerHTML=`
           <div class="set-label" style="margin-top:14px">\u6B4C\u5355\u663E\u793A</div>
           <div class="opt-cards">
             <button class="opt-card sel" data-pl-mode="collection" type="button" disabled>\u6B4C\u5355\u96C6\u5408\u9875\uFF08Lumen \u5F3A\u5236\uFF09</button>
