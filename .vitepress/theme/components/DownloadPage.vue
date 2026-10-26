@@ -29,7 +29,18 @@
       </div>
     </section>
 
-    <div v-if="loading && !release" class="dl-loading" aria-live="polite">
+    <section v-if="isMobile" class="mobile-unsupported" role="status" aria-live="polite">
+      <span class="mobile-icon" aria-hidden="true">📱</span>
+      <div class="mobile-copy">
+        <span class="mobile-badge">检测到移动设备</span>
+        <h2>该应用不支持移动平台</h2>
+        <p>
+          {{ activeProductMeta.name }} 仅提供 Linux、Windows 与 macOS 桌面版，请在电脑上访问本页下载。
+        </p>
+      </div>
+    </section>
+
+    <div v-else-if="loading && !release" class="dl-loading" aria-live="polite">
       <div class="skeleton skeleton-strip" />
       <div class="skeleton skeleton-card" v-for="i in 3" :key="i" />
       <p class="loading-text">正在获取 {{ activeProductMeta.name }} 的最新版本…</p>
@@ -102,6 +113,27 @@
         当前设备是 Intel Mac，Quaver 目前只提供 Apple Silicon（M 系列）构建。
       </p>
 
+      <section v-if="activeProduct === 'music' && client.os === 'linux'" class="stores">
+        <div class="stores-copy">
+          <span class="stores-badge">Linux 用户</span>
+          <h2>用应用商店统一更新</h2>
+          <p>
+            推荐通过如意玲珑或星火应用商店安装，后续升级由商店统一管理。商店内搜索
+            <strong>Quaver</strong> 即可。
+          </p>
+        </div>
+        <div class="store-links">
+          <a href="https://store.linyaps.org.cn/" target="_blank" rel="noopener noreferrer">
+            <span class="store-name">如意玲珑商店</span>
+            <span class="store-arrow">↗</span>
+          </a>
+          <a href="https://www.spark-app.store/" target="_blank" rel="noopener noreferrer">
+            <span class="store-name">星火应用商店</span>
+            <span class="store-arrow">↗</span>
+          </a>
+        </div>
+      </section>
+
       <section
         v-for="(group, groupIndex) in platformGroups"
         :key="group.os"
@@ -148,27 +180,6 @@
               </a>
             </article>
           </div>
-        </div>
-      </section>
-
-      <section v-if="activeProduct === 'music'" class="stores">
-        <div class="stores-copy">
-          <span class="stores-badge">Linux 用户</span>
-          <h2>用应用商店统一更新</h2>
-          <p>
-            推荐通过如意玲珑或星火应用商店安装，后续升级由商店统一管理。商店内搜索
-            <strong>Quaver</strong> 即可。
-          </p>
-        </div>
-        <div class="store-links">
-          <a href="https://store.linyaps.org.cn/" target="_blank" rel="noopener noreferrer">
-            <span class="store-name">如意玲珑商店</span>
-            <span class="store-arrow">↗</span>
-          </a>
-          <a href="https://www.spark-app.store/" target="_blank" rel="noopener noreferrer">
-            <span class="store-name">星火应用商店</span>
-            <span class="store-arrow">↗</span>
-          </a>
         </div>
       </section>
 
@@ -248,6 +259,12 @@ interface PlatformGroup {
   arches: ArchGroup[]
 }
 
+interface ClientInfo {
+  os: Os
+  arch: Arch
+  isMobile: boolean
+}
+
 const products: Product[] = [
   {
     id: 'music',
@@ -286,7 +303,8 @@ const error = ref('')
 const stale = ref(false)
 const servedByProxy = ref(false)
 const useProxy = ref(false)
-const client = ref<{ os: Os; arch: Arch }>({ os: 'unknown', arch: 'unknown' })
+const client = ref<ClientInfo>({ os: 'unknown', arch: 'unknown', isMobile: false })
+const isMobile = computed(() => client.value.isMobile)
 
 let requestSeq = 0
 
@@ -567,20 +585,30 @@ function sortAssets(assets: AssetInfo[]): AssetInfo[] {
   })
 }
 
-function detectClient(): { os: Os; arch: Arch } {
-  if (typeof navigator === 'undefined') return { os: 'unknown', arch: 'unknown' }
+function detectClient(): ClientInfo {
+  if (typeof navigator === 'undefined') {
+    return { os: 'unknown', arch: 'unknown', isMobile: false }
+  }
 
   const ua = navigator.userAgent.toLowerCase()
   const nav = navigator as Navigator & {
-    userAgentData?: { platform?: string; architecture?: string }
+    userAgentData?: { platform?: string; architecture?: string; mobile?: boolean }
   }
   const platform = (nav.userAgentData?.platform || navigator.platform || '').toLowerCase()
   const uaArch = (nav.userAgentData?.architecture || '').toLowerCase()
+  const touchMac = /mac|macintosh/.test(platform) && (navigator.maxTouchPoints || 0) > 1
+  const isMobileDevice =
+    nav.userAgentData?.mobile === true ||
+    touchMac ||
+    /android|iphone|ipad|ipod|windows phone|harmonyos|openharmony|mobile|mobi/.test(ua)
+
+  // 移动端没有桌面安装包，直接识别为移动设备，避免 Android/iOS 被归入 Linux/macOS
+  if (isMobileDevice) return { os: 'unknown', arch: 'unknown', isMobile: true }
 
   let os: Os = 'unknown'
-  if (/mac|iphone|ipad/.test(platform) || /mac os x|iphone|ipad/.test(ua)) os = 'macos'
+  if (/mac/.test(platform) || /mac os x/.test(ua)) os = 'macos'
   else if (/win/.test(platform) || /windows/.test(ua)) os = 'windows'
-  else if (/linux|x11|android/.test(platform) || /linux|x11/.test(ua)) os = 'linux'
+  else if (/linux|x11/.test(platform) || /linux|x11/.test(ua)) os = 'linux'
 
   let arch: Arch = 'unknown'
   const archProbe = `${uaArch} ${ua}`
@@ -589,7 +617,7 @@ function detectClient(): { os: Os; arch: Arch } {
   else if (/x86_64|amd64|win64|(^|\s)x64($|\s)|x86/.test(archProbe)) arch = 'x64'
   else if (os === 'macos' && /intel/.test(platform)) arch = 'x64'
 
-  return { os, arch }
+  return { os, arch, isMobile: false }
 }
 
 function downloadUrl(url: string): string {
@@ -762,7 +790,7 @@ function switchProduct(id: Product['id']) {
   activeProduct.value = id
   release.value = null
   error.value = ''
-  load()
+  if (!isMobile.value) load()
 }
 
 function retryWithProxy() {
@@ -784,6 +812,10 @@ onMounted(() => {
     useProxy.value = localStorage.getItem(PROXY_STORAGE_KEY) === '1'
   } catch {
     useProxy.value = false
+  }
+  if (isMobile.value) {
+    loading.value = false
+    return
   }
   load()
 })
@@ -1283,6 +1315,61 @@ onMounted(() => {
   font-size: 0.85rem;
 }
 
+/* ========== 移动端 ========== */
+.mobile-unsupported {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 24px;
+  padding: 28px 30px;
+  border: 1px solid color-mix(in srgb, var(--main-color) 32%, var(--vp-c-border));
+  border-radius: 22px;
+  background:
+    radial-gradient(100% 180% at 100% 0%, color-mix(in srgb, var(--main-color) 16%, transparent), transparent 60%),
+    color-mix(in srgb, var(--vp-c-bg-soft) 76%, transparent);
+  box-shadow: 0 14px 38px color-mix(in srgb, var(--main-color) 8%, transparent);
+}
+
+.mobile-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 auto;
+  border: 1px solid var(--dl-card-border);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--vp-c-bg) 72%, transparent);
+  font-size: 1.7rem;
+}
+
+.mobile-copy {
+  min-width: 0;
+}
+
+.mobile-badge {
+  color: var(--main-color);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.mobile-copy h2 {
+  margin: 6px 0 6px;
+  border: none;
+  padding: 0;
+  color: var(--vp-c-text-1);
+  font-size: 1.25rem;
+}
+
+.mobile-copy p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--vp-c-text-2);
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
 /* ========== 平台分组 ========== */
 .platform {
   margin-top: 22px;
@@ -1719,6 +1806,19 @@ onMounted(() => {
   .recommend,
   .stores {
     padding: 20px;
+  }
+
+  .mobile-unsupported {
+    align-items: flex-start;
+    padding: 22px 20px;
+    border-radius: 18px;
+  }
+
+  .mobile-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 15px;
+    font-size: 1.4rem;
   }
 
   .recommend .primary-btn {
