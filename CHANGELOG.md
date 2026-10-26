@@ -8,22 +8,23 @@
 - 上线歌单 - 快速跳转正在播放的歌曲功能
 - 上线快速回顶功能
 - 我喜欢 + 本地音乐为主的“全部音乐”页面
-- 上线 TyphoeusGO-LocalGuard 功能（也可能 1.9）
+- 上线 TyphoeusGO-LocalGuard 功能
+
+## v1.7.1
+
+![Version](./images/1-7/171.webp)
+
+
+Quaver Music 1.7.1 现已发布！
+
+- 该版本中，已经实现了退出后清空列表功能
+- 该版本中，我们已上线 AMLL Background 功能
 
 ## v1.7.0 FireFly
 
 ![Version](./images/1-7/170.webp)
 
 欢迎来到 Quaver Music 1.7.0 FireFly， 在经历了 1.6.0 的过渡版本，且迎来了一波漏洞潮的修复，我们平稳的落地了 Quaver Music 1.7.0
-
-### 重要！
-
-该版本我们修复了一个关系项目安危的安全问题
-
-- 我们已为 Typhoeus-Go 上线了 Stream Guard 安全功能。以保障项目安全
-
-未来 1.8 Jinhsi 或 1.9 我们会实现加密后的缓存落盘
-- 目前基础思路为 Quaver Music 发送给 Typhoeus-Go 解密信息（随机密钥），由 Typhoeus-Go 认证会员权限并鉴权缓存信息后解密再回传（.ql），且利用 Electron localStorage 功能，以缓解一些弱网环境的播放，~~私钥不可能会是 4 的那种~~
 
 ### 新特性
 
@@ -72,6 +73,12 @@
 
 - 减少了一定的 Slop，提高了一定可读性
 
+### Typhoeus-Go
+
+- 我们已为 Typhoeus-Go 上线了 Stream Guard 安全功能。以保障项目安全
+	- 未来 1.8 Jinhsi 或 1.9 我们会实现加密后的缓存落盘
+		- 目前基础思路为 Quaver Music 发送给 Typhoeus-Go 解密信息（随机密钥），由 Typhoeus-Go 认证会员权限并鉴权缓存信息后解密再回传（.ql），且利用 Electron localStorage 功能，以缓解一些弱网环境的播放，~~私钥不可能会是 4 的那种~~
+- 现在已支持可选启用每日听歌音响力
 ## v1.6.3
 
 ![Version](./images/1-6/163.webp)
