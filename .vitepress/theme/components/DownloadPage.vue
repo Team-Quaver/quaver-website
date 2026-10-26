@@ -27,6 +27,22 @@
           </span>
         </button>
       </div>
+
+      <div class="channel-switch" role="group" :aria-label="`${activeProductMeta.name} 下载分支`">
+        <span class="channel-label">下载分支</span>
+        <button
+          v-for="channel in activeProductMeta.channels"
+          :key="channel.id"
+          type="button"
+          class="channel-tab"
+          :class="{ active: channel.id === activeChannel }"
+          :aria-pressed="channel.id === activeChannel"
+          @click="switchChannel(channel.id)"
+        >
+          {{ channel.label }}
+        </button>
+        <span class="channel-hint">{{ activeChannelMeta.hint }}</span>
+      </div>
     </section>
 
     <section v-if="isMobile" class="mobile-unsupported" role="status" aria-live="polite">
@@ -62,7 +78,7 @@
     <template v-else-if="release">
       <div class="version-strip">
         <div class="version-main">
-          <span class="version-pill">最新版本</span>
+          <span class="version-pill">{{ activeChannelMeta.badge }}</span>
           <strong class="version-tag">{{ release.tag_name }}</strong>
           <span class="version-date">{{ formatDate(release.published_at) }}</span>
           <span v-if="stale" class="cache-note" title="GitHub 请求失败，当前展示本地缓存">
@@ -217,6 +233,14 @@ interface Release {
   published_at: string
   html_url: string
   assets: ReleaseAsset[]
+  prerelease?: boolean
+}
+
+interface Channel {
+  id: string
+  label: string
+  badge: string
+  hint: string
 }
 
 interface Product {
@@ -227,6 +251,8 @@ interface Product {
   icon: string
   repoUrl: string
   releasesUrl: string
+  defaultChannel: string
+  channels: Channel[]
 }
 
 type Os = 'linux' | 'windows' | 'macos' | 'unknown'
@@ -273,7 +299,28 @@ const products: Product[] = [
     repo: 'Team-Quaver/quaver-music',
     icon: '/imgs/fav.svg',
     repoUrl: 'https://github.com/Team-Quaver/quaver-music',
-    releasesUrl: 'https://github.com/Team-Quaver/quaver-music/releases'
+    releasesUrl: 'https://github.com/Team-Quaver/quaver-music/releases',
+    defaultChannel: 'stable',
+    channels: [
+      {
+        id: 'stable',
+        label: 'Stable',
+        badge: '稳定版',
+        hint: '正式发布，默认推荐'
+      },
+      {
+        id: 'beta',
+        label: 'Beta',
+        badge: 'Beta 测试版',
+        hint: '新功能尝鲜，可能不稳定'
+      },
+      {
+        id: 'nightly',
+        label: 'Nightly',
+        badge: 'Nightly 每日构建',
+        hint: '每日自动构建，仅供测试'
+      }
+    ]
   },
   {
     id: 'astra',
@@ -282,7 +329,22 @@ const products: Product[] = [
     repo: 'Team-Quaver/quaver-astra',
     icon: '/imgs/quaver-astra.svg',
     repoUrl: 'https://github.com/Team-Quaver/quaver-astra',
-    releasesUrl: 'https://github.com/Team-Quaver/quaver-astra/releases'
+    releasesUrl: 'https://github.com/Team-Quaver/quaver-astra/releases',
+    defaultChannel: 'stable',
+    channels: [
+      {
+        id: 'stable',
+        label: '正式版',
+        badge: '正式版',
+        hint: '正式发布，默认推荐'
+      },
+      {
+        id: 'snapshot',
+        label: 'Snapshot',
+        badge: 'Snapshot 快照版',
+        hint: '开发快照，可能不稳定'
+      }
+    ]
   }
 ]
 
@@ -295,6 +357,11 @@ const activeProduct = ref<Product['id']>('music')
 const activeProductMeta = computed(
   () => products.find(product => product.id === activeProduct.value) || products[0]
 )
+const activeChannel = ref('stable')
+const activeChannelMeta = computed(() => {
+  const channels = activeProductMeta.value.channels
+  return channels.find(channel => channel.id === activeChannel.value) || channels[0]
+})
 
 const release = ref<Release | null>(null)
 const loading = ref(true)
@@ -678,10 +745,10 @@ async function requestRelease(url: string): Promise<Release> {
 }
 
 async function fetchLatest(product: Product): Promise<{ release: Release; proxy: boolean }> {
-  const apiUrl = `https://api.github.com/repos/${product.repo}/releases/latest`
+  const apiUrl = channelApiUrl(product)
 
   try {
-    return { release: await requestRelease(apiUrl), proxy: false }
+    return { release: await requestChannelRelease(apiUrl), proxy: false }
   } catch (directError) {
     const status = directError instanceof HttpError ? directError.status : 0
     // 404（仓库/版本不存在）与请求格式错误不应该靠镜像解决
@@ -689,7 +756,7 @@ async function fetchLatest(product: Product): Promise<{ release: Release; proxy:
 
     try {
       return {
-        release: await requestRelease(`${PROXY_PREFIX}${apiUrl}`),
+        release: await requestChannelRelease(`${PROXY_PREFIX}${apiUrl}`),
         proxy: true
       }
     } catch {
@@ -698,9 +765,41 @@ async function fetchLatest(product: Product): Promise<{ release: Release; proxy:
   }
 }
 
+function channelApiUrl(product: Product): string {
+  const base = `https://api.github.com/repos/${product.repo}/releases`
+  if (activeChannel.value === 'nightly') return `${base}/tags/nightly`
+  if (activeChannel.value === 'stable') return `${base}/latest`
+  // /latest 不包含预发布版本，Beta 与 Snapshot 从发布列表里筛选。
+  return `${base}?per_page=100`
+}
+
+async function requestChannelRelease(url: string): Promise<Release> {
+  const payload = (await requestRelease(url)) as unknown as Release | Release[]
+  if (!Array.isArray(payload)) return payload
+
+  const selected = payload.find(item => matchesChannel(item, activeChannel.value))
+
+  if (!selected) {
+    throw new HttpError(404, `没有找到可用的 ${activeChannelMeta.value.label} 版本`)
+  }
+  return selected
+}
+
+function matchesChannel(item: Release, channel: string): boolean {
+  const tag = item.tag_name.toLowerCase()
+  if (channel === 'nightly') return tag === 'nightly'
+  if (channel === 'beta') return item.prerelease === true && tag.includes('beta')
+  if (channel === 'snapshot') return item.prerelease === true && tag.startsWith('snapshot')
+  return item.prerelease !== true
+}
+
+function cacheKey(repo: string, channel = activeChannel.value): string {
+  return `${CACHE_PREFIX}${repo}:${channel}`
+}
+
 function readCache(repo: string): { at: number; release: Release } | null {
   try {
-    const raw = localStorage.getItem(`${CACHE_PREFIX}${repo}`)
+    const raw = localStorage.getItem(cacheKey(repo))
     if (!raw) return null
     const parsed = JSON.parse(raw)
     if (!parsed?.release?.tag_name || !Array.isArray(parsed.release.assets)) return null
@@ -713,7 +812,7 @@ function readCache(repo: string): { at: number; release: Release } | null {
 function writeCache(repo: string, data: Release) {
   try {
     localStorage.setItem(
-      `${CACHE_PREFIX}${repo}`,
+      cacheKey(repo),
       JSON.stringify({ at: Date.now(), release: data })
     )
   } catch {
@@ -726,7 +825,9 @@ function messageForError(err: unknown): string {
     if (err.status === 403 || err.status === 429) {
       return 'GitHub API 请求次数已达上限。请稍后重试，或勾选「中国大陆加速」通过镜像获取。'
     }
-    if (err.status === 404) return '没有找到可用的正式版本，请前往 GitHub Releases 查看。'
+    if (err.status === 404) {
+      return `没有找到可用的 ${activeChannelMeta.value.label} 版本，请前往 GitHub Releases 查看。`
+    }
     return `GitHub 返回了错误（${err.status}）：${err.message}`
   }
   if (err instanceof DOMException && err.name === 'AbortError') {
@@ -788,6 +889,15 @@ async function load(force = false) {
 function switchProduct(id: Product['id']) {
   if (id === activeProduct.value) return
   activeProduct.value = id
+  activeChannel.value = activeProductMeta.value.defaultChannel
+  release.value = null
+  error.value = ''
+  if (!isMobile.value) load()
+}
+
+function switchChannel(id: string) {
+  if (id === activeChannel.value) return
+  activeChannel.value = id
   release.value = null
   error.value = ''
   if (!isMobile.value) load()
@@ -1002,6 +1112,50 @@ onMounted(() => {
 
 .product-tab.active .product-copy small {
   color: var(--vp-c-text-2);
+}
+
+/* ========== 下载分支 ========== */
+.channel-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.channel-label {
+  margin-right: 2px;
+  color: var(--vp-c-text-3);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.channel-tab {
+  border: 1px solid var(--dl-card-border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: color-mix(in srgb, var(--vp-c-bg) 52%, transparent);
+  color: var(--vp-c-text-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.channel-tab:hover {
+  border-color: color-mix(in srgb, var(--main-color) 38%, var(--vp-c-border));
+  color: var(--vp-c-text-1);
+}
+
+.channel-tab.active {
+  border-color: color-mix(in srgb, var(--main-color) 52%, transparent);
+  background: color-mix(in srgb, var(--main-color) 13%, transparent);
+  color: var(--main-color);
+}
+
+.channel-hint {
+  color: var(--vp-c-text-3);
+  font-size: 0.73rem;
 }
 
 /* ========== 加载 / 错误 ========== */
@@ -1788,6 +1942,15 @@ onMounted(() => {
 
   .product-tab {
     flex: 1 1 100%;
+  }
+
+  .channel-switch {
+    gap: 7px;
+  }
+
+  .channel-hint {
+    flex-basis: 100%;
+    margin-top: 2px;
   }
 
   .platform {
