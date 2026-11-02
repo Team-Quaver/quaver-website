@@ -40,10 +40,10 @@ Quaver Music 基于 Electron + Vite，并辅以 Sparkle 插件和 Golang MPV 播
   <img src="/imgs/1-1home-darklight.webp" width="480">
 </p>
 
-与此同时，我们也为不依赖插件，只需要一个能用的 Q 音第三方客户端打造了 Quaver Astra，基于 MyGO 开发，同样支持 Linux/Windows/macOS，甚至龙芯平台。
+与此同时，我们也为不依赖插件，只需要一个能用的 Q 音第三方客户端的用户打造了 Quaver Astra，基于 MyGO 开发，同样支持 Linux/Windows/macOS，龙芯平台。
 
 <p align="center">
-  <img src="/imgs/astra.png" width="480">
+  <img src="/imgs/astra.webp" width="480">
 </p>
 
 
@@ -55,6 +55,8 @@ Quaver Music 基于 Electron + Vite，并辅以 Sparkle 插件和 Golang MPV 播
   <img src="/imgs/perf.png" width="300">
 </p>
 
+而 Astra 基于 MyGO，基于系统原生 GPU 加速框架，为其带来优秀的。
+
 ## 美于现代
 
 基于现代毛玻璃设计，且支持封面提色，系统强调色提色。让 Quaver Music 融入你的桌面。
@@ -63,7 +65,13 @@ Quaver Music 基于 Electron + Vite，并辅以 Sparkle 插件和 Golang MPV 播
   <img src="/imgs/nowplaying.webp" width="480">
 </p>
 
-## 百变于你
+
+<p align="center">
+  <img src="/imgs/astra-np.webp" width="480">
+</p>
+
+
+## 百变于你*
 
 基于花火插件系统（Sparkle），拥有主题、插件、扩展三个类别，只为打造属于你的 Quaver Music。
 
@@ -71,6 +79,7 @@ Quaver Music 基于 Electron + Vite，并辅以 Sparkle 插件和 Golang MPV 播
   <img src="/imgs/md.png" width="480">
 </p>
 
+> Quaver Astra 由于架构问题，故不支持插件系统
 
 ## 社区为本
 

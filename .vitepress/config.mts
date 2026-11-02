@@ -181,12 +181,9 @@ export default defineConfig({
         text: '开始',
         items: [
           { text: '介绍', link: '/guide/' },
-          { text: '更新日志', link: '/CHANGELOG' },
           { text: '免责协议', link: '/agreement' },
           { text: '花火插件', link: '/sparkle/' },
-          { text: '下载', link: '/download/' },
           { text: 'Quaver Astra', link: '/quaver-astra' },
-          { text: 'Quaver Astra - 更新日志', link: '/CHANGELOG-Astra' },
         ],
       },
       {

@@ -3,7 +3,7 @@
     <section class="dl-hero">
       <div class="hero-orb hero-orb-a" aria-hidden="true" />
       <div class="hero-orb hero-orb-b" aria-hidden="true" />
-      <p class="dl-eyebrow">QUAVER MUSIC DOWNLOAD</p>
+      <p class="dl-eyebrow">QUAVER MUSIC / ASTRA DOWNLOAD</p>
       <h1 class="dl-title">选择你的 Quaver Music</h1>
       <p class="dl-lead">
         版本信息直接来自 GitHub Releases。选择产品后，页面会按平台与架构整理最新构建。
@@ -134,15 +134,15 @@
           <span class="stores-badge">Linux 用户</span>
           <h2>用应用商店统一更新</h2>
           <p>
-            推荐通过如意玲珑或星火应用商店安装，后续升级由商店统一管理。商店内搜索
-            <strong>Quaver</strong> 即可。
+            推荐通过<!--如意玲珑或-->星火应用商店安装，后续升级由商店统一管理。商店内搜索
+            <strong>Quaver Music / Quaver Astra</strong> 即可。
           </p>
         </div>
         <div class="store-links">
-          <a href="https://store.linyaps.org.cn/" target="_blank" rel="noopener noreferrer">
+<!--          <a href="https://store.linyaps.org.cn/" target="_blank" rel="noopener noreferrer">
             <span class="store-name">如意玲珑商店</span>
             <span class="store-arrow">↗</span>
-          </a>
+          </a>-->
           <a href="https://www.spark-app.store/" target="_blank" rel="noopener noreferrer">
             <span class="store-name">星火应用商店</span>
             <span class="store-arrow">↗</span>
@@ -348,7 +348,7 @@ const products: Product[] = [
   }
 ]
 
-const PROXY_PREFIX = 'https://gh-proxy.com/'
+const PROXY_PREFIX = 'https://v4.gh-proxy.com/'
 const CACHE_PREFIX = 'quaver-release:'
 const CACHE_TTL = 10 * 60 * 1000
 const PROXY_STORAGE_KEY = 'quaver-download-proxy'
@@ -423,7 +423,7 @@ function archMeta(os: Exclude<Os, 'unknown'>, arch: Exclude<Arch, 'unknown'>) {
         : arch === 'loong64'
           ? '龙芯 3A5000 及以后'
           : 'AMD / Intel / 兆芯 / 海光',
-    warning: arch === 'loong64' ? 'Electron 34 · Wayland 兼容有限 · 实验性' : undefined
+    warning: arch === 'loong64' ? 'Electron 43 · 实验性' : undefined
   }
 }
 
