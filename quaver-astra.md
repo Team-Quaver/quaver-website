@@ -14,14 +14,13 @@ Quaver Astra 是一个实验性项目，基于 Golang + MyGO Native 模式开发
 Astra 对比 Quaver Music 而言差别在于不会实现 Sparkle 插件系统和本地音乐，在其他方面尽量推进功能实现，定位而言，一个愿意为 Electron 买单，但是可以换来极致体验的用户，一个为不愿意再多个 WebView，只需要基础的 Q 音在线播放体验即可。
 
 目前计划：
-- 同样使用 MPV 播放，减少 Go 解码器问题
 - 跨平台
 - 同样支持 QRC 解码和 Karaoke
 - 同样实现系统集成
 - 同样实现音译
 
 <p align="center">
-  <img src="/imgs/astra.png" width="864">
+  <img src="/imgs/astra.webp" width="864">
 </p>
 
 ## 架构图
