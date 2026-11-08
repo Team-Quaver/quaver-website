@@ -1,11 +1,11 @@
 # Quaver Music 前端开发指南
 
-> 本指南覆盖 `ui/` 目录全部前端代码（渲染层 `ui/src/**` + Electron 主进程 `ui/electron/**` + Sparkle 插件系统），
-> 目标是「读完就能上手改」：**所有变量、所有取值域、所有持久化键、所有外部接口**都在此登记，并做了分类。
+> 本指南覆盖 `ui/` 下的全部前端代码：渲染层 `ui/src/**`、Electron 主进程 `ui/electron/**` 和 Sparkle 插件系统。
+> 常用的变量、取值域、持久化键和外部接口都登记在这里，按主题分类，方便改代码时查找。
 >
-> 适用范围：仓库 `/home/ne0w0r1d/Desktop/quaver`，前端全部在 `ui/`。文中行号/常量以当前 main 分支为准。
+> 适用范围：Quaver Music 仓库的 `ui/`。行号和常量以当前 main 分支为准，升级依赖或移动文件后需要同步核对。
 >
-> 一句话架构：**Vite SPA（无框架，视图按需懒加载）** + **Electron 桌面壳** + **Go sidecar 后端（:3200）** + **Sparkle 插件系统** + 内置 AMLL 歌词引擎/桌面歌词覆盖层窗。
+> 架构可以概括为：Vite SPA（无框架，视图按需加载）+ Electron 桌面壳 + Go sidecar 后端 + Sparkle 插件系统，另有内置 AMLL 歌词引擎和独立的桌面歌词覆盖层窗。音频由主进程选择 Liino 原生库或 mpv 子进程。
 
 ## 目录
 
@@ -32,16 +32,17 @@
 
 | 层 | 技术 | 说明 |
 | --- | --- | --- |
-| 渲染层 | Vite **SPA**，**无框架**（原生 DOM + TS） | 唯一应用入口 `index.html` → `src/main.ts`；`src/**` 共约 20,900 行 TS。其余根目录 `<name>.html` 全是 `public/redirect.js` 薄跳转层；`desktop-lyrics.html` 是独立覆盖层窗页 |
+| 渲染层 | Vite **SPA**，**无框架**（原生 DOM + TS） | 唯一应用入口 `index.html` → `src/main.ts`；`src/**` 约 32,900 行 TS。根目录其余 `<name>.html` 是 `public/redirect.js` 跳转层；`desktop-lyrics.html` 是独立的覆盖层窗页 |
 | 视图 | `src/views/*.ts` **按需动态加载** | 路由 → 视图的 `loaders` 表在 `src/views/index.ts`；首次访问才解析，交互意图（hover/pointerdown）才预取 |
-| 运行时 | **Node 24 原生类型剥离（strip-only）** | `electron/**`、`scripts/**`、`src/**` 全是 `.ts`，**无 tsc 产物、无 outDir** |
-| 桌面壳 | Electron 44 | `ui/electron/**`；`main` 入口 = `electron/main.ts` |
+| 运行时 | **Node 24 原生类型剥离（strip-only）** | `electron/**`、`scripts/**`、`src/**` 全是 `.ts`，不生成 tsc 产物，也没有 outDir |
+| 桌面壳 | Electron 44（当前锁到 44.9.3） | `ui/electron/**`；`main` 入口是 `electron/main.ts` |
 | 歌词引擎 | AMLL（宿主内置，非插件） | `src/lyrics/`（amll 解析+渲染 / builtin 注册 / qrc-kana 振假名） |
+| 音频 | 主进程选择 **Liino** 或 **mpv** | Linux/Windows 默认 Liino：`libliino` 经 koffi 在同进程加载。macOS 默认 mpv；Liino 库加载失败时也会回落到 mpv |
 | 后端 | sidecar（Go: `vendor/Typhoeus-go`），监听 `:3200` | 渲染层经同源 `/api` 中继访问；凭证只在主进程↔sidecar 间流转 |
 | 插件 | Sparkle（git submodule `vendor/Sparkle`） | SDK 纯类型契约；官方插件静态打包，第三方插件 ESM 单文件 |
 | 打包 | electron-builder（配置在 `packages/`） | AppImage，x86_64 / aarch64 共用 `packages/appimage/arm-x86.yml`；`pnpm run dist` |
 
-- 包名 `red.0w0.quaver`，`productName: "Quaver Music"`，`desktopName: "red.0w0.quaver.desktop"`，`version: 1.5.0`，`engines.node >= 24`，`packageManager: pnpm@10.33.0`。运行时依赖只有 `mpris-service`（主进程 MPRIS）。
+- 包名 `red.0w0.quaver`，`productName: "Quaver Music"`，`desktopName: "red.0w0.quaver.desktop"`，`version: 2.0.0`，`engines.node >= 24.22.1`，`packageManager: pnpm@10.33.0`。运行时依赖为 `@team-quaver/liino-node`、`koffi` 和 `mpris-service`。
 - 窗口身份 app_id / WM_CLASS = `red.0w0.quaver`，**唯一真相是 `package.json` 顶层 `desktopName`**。
 
 ### 1.2 应用结构（SPA）与路由
@@ -58,18 +59,20 @@
 | `/daily` | `views/daily.ts` | 每日 30 首 |
 | `/liked` | `views/liked.ts` | 我喜欢 |
 | `/local` | `views/local.ts` | 本地音乐（源管理 · 扫描 · 自动刮削 · 曲目表） |
+| `/cloud` | `views/cloud.ts` | 微云音乐网盘（授权、匹配、刮削、播放） |
+| `/all` | `views/all.ts` | 所有歌曲（本地、我喜欢、微云合流；按歌手/专辑分组） |
 | `/playlists` | `views/playlists.ts` | 歌单广场（PlaylistMode=menu 时侧栏隐藏入口） |
 | `/playlist` | `views/playlist.ts` | 歌单详情 |
 | `/toplist` | `views/toplist.ts` | 排行榜（`?id=&period=`，期次逻辑在 `lib/toplist-periods.ts`） |
 | `/singer` | `views/singer.ts` | 歌手主页（`SINGER_TABS` hot/new/album） |
 | `/singer-albums` | `views/singer-albums.ts` | 歌手全部专辑 |
 | `/album` | `views/album.ts` | 专辑详情 |
-| `/settings` | `views/settings.ts` | 设置（最大视图，约 1,460 行） |
+| `/settings` | `views/settings.ts` | 设置（最大视图，约 2,085 行） |
 | `/log` | `views/log.ts` | 日志 |
 | `/user` | `views/user.ts` | 用户页（退出动画 `views/_shared.ts:ME_OUT_MS = 180`） |
 | `/login` | `views/login.ts` | 登录 |
 
-- 侧栏导航 `shell.ts` 的 `nav`：首页 `/`、猜你喜欢 `/guess`、每日 30 首 `/daily`、我喜欢 `/liked`、**歌单 `/playlists`**（icon `list`；`PlaylistMode=menu` 时隐藏，改由侧栏歌单列表承担）、本地音乐 `/local`（icon `folder`）。
+- 侧栏导航来自 `lib/nav-items.ts` 的 `NAV_ITEMS`：首页 `/`、猜你喜欢 `/guess`、每日 30 首 `/daily`、我喜欢 `/liked`、歌单 `/playlists`、所有歌曲 `/all`、本地音乐 `/local`、微云网盘 `/cloud`。顺序和显隐由 `Style.NavOrder` / `Style.NavHidden` 控制；歌单项在 `PlaylistMode=menu` 时由 CSS 隐藏，改由侧栏歌单列表承担。
 - 视图共用件在 `views/_shared.ts`（小工具/页面头/粘顶/响应类型），随第一个真视图进内存。
 
 ### 1.3 启动流程（渲染层，`src/main.ts`）
@@ -93,8 +96,8 @@
 
 ### 1.4 顶层 git 结构与子模块
 
-- `.gitmodules` 引用 `vendor/Sparkle`（插件 SDK + 官方插件 + marketplace）与 `vendor/Typhoeus`（sidecar / MPRIS 守护）。
-- `dist-bin/` 存放随包 sidecar 二进制（`quaver-server*`）；`build-res/audio` 存放随包 mpv 运行时。
+- `.gitmodules` 引用 `vendor/Sparkle`（插件 SDK、官方插件和 marketplace）、`vendor/Typhoeus-go`（sidecar）和 `vendor/Liino`（原生音频库与 Node 绑定）。
+- `dist-bin/` 存放随包 sidecar 二进制（`quaver-server*`）；`build-res/audio` 存放 mpv 运行时，`build-res/liino` 存放 `libliino`。
 
 ## 2. 目录与模块职责
 
@@ -105,8 +108,8 @@
 | `main.ts` | SPA 入口：应用偏好、boot 壳层、启动插件/MPRIS/桌面歌词/热键/防睡眠桥 |
 | `shell.ts` | 壳层：标题栏/侧栏/内容区/播放条注入，hash 路由 + 前进/后退栈，导航，封面染色应用 |
 | `views/index.ts` | 路由注册表（懒加载 + 预取 + 插件路由兜底） |
-| `views/*.ts` | 16 个视图模块 + `_shared.ts` 共用件；每个模块首行注明由 index.ts 按需动态 import |
-| `player.ts` | 播放器模块级单例 `export const player`（1,603 行）：队列/收藏/会话/歌词管线 |
+| `views/*.ts` | 18 个路由视图 + `_shared.ts` 共用件；每个模块由 `views/index.ts` 按需动态 import |
+| `player.ts` | 播放器模块级单例 `export const player`（2,727 行）：队列/收藏/会话/歌词管线 |
 | `lyric.ts` | LRC 解析与辅助行挑选（`parseLrc`/`coerceLyricToLrc`/`pickAux`，AMLL 与行级共用） |
 | `lyrics/` | 内置 AMLL 歌词引擎：`amll.ts`（解析+渲染+dispose）、`builtin.ts`（注册表兜底位）、`qrc-kana.ts`（QRC `[kana:]` 振假名） |
 | `desktop-lyrics.ts` / `desktop-lyrics.css` | 桌面歌词覆盖层页（独立窗；几何公式在 `lib/desktop-lyrics-layout.ts`） |
@@ -114,7 +117,7 @@
 | `relay.ts` | Vite dev/preview 的 `/api` 中继中间件（转发 sidecar + 封面/背景/强调色/Sparkle/本地代理） |
 | `fake-audio.ts` | 静音占位音轨（维持系统媒体会话） |
 | `globals.d.ts` | ambient 声明：`__APP_VERSION__`、`window.quaver*` 桥 |
-| `style.css` | 全局样式（2,442 行），**所有 CSS 变量的定义处** |
+| `style.css` | 全局样式（2,455 行），所有 CSS 变量的定义处 |
 | `lib/*.ts` | 纯逻辑/门面模块（见下） |
 | `components/*.ts` | UI 组件（见下） |
 | `sparkle/*.ts` | 插件系统宿主端（见 §13） |
@@ -124,7 +127,7 @@
 | 文件 | 职责 |
 | --- | --- |
 | `config.ts` | quaver.conf 的渲染层门面（`cfg`/`cfgSet`/`cfgSetSoon`/`loadConfig`…） |
-| `prefs.ts` | 内部枚举 ⇄ 配置取值的映射与即时生效（最大门面，895 行） |
+| `prefs.ts` | 内部枚举 ⇄ 配置取值的映射与即时生效（最大门面，1,219 行） |
 | `api.ts` | `/api` 封装、音质表、歌曲标题/副标题、剪贴板 |
 | `accent.ts` | 系统强调色轮询（`--cvg-accent` 的 system 档来源） |
 | `ambient.ts` | 环境色层（`.ambient`）DOM 应用 |
@@ -140,6 +143,7 @@
 | `playlists.ts` / `favs.ts` / `songlist-detail.ts` | 歌单/收藏数据层与写回 |
 | `songs.ts` | 歌曲行渲染与 `loadLiked` 等 |
 | `local.ts` | 本地/NAS 曲库渲染侧数据层：`/api/local/*` 客户端、库快照 + 进度轮询、`trackToSong`（Song.local 指纹）、扫描/刮削/导入/编辑动作 |
+| `cloud.ts` | 微云网盘渲染侧数据层：授权状态、曲目快照、刮削进度与播放动作 |
 | `songtiers.ts` | 单曲音质档位存在性判定（纯逻辑） |
 | `shuffle.ts` | 伪随机洗牌（FNV-1a hash 序列） |
 | `reorder.ts` | 队列拖拽重排几何计算 |
@@ -210,7 +214,7 @@
 | `DefaultLyricsFonts` | `Source Han Serif` | 同上 | 歌词字体 |
 | `ShowTranslation` | `True` | 布尔 | （兼容旧值）歌词翻译开关；新配置用 `LyricAux` |
 | `LyricAux` | `translation` | `off` / `translation` / `romanization` | 歌词辅助行：关闭 / 翻译 / 注音（Ruby） |
-| `LyricScale` | `1` | `0.7`–`1.5`（浮点） | 行级（LRC）歌词缩放；逐字（QRC/AMLL）模式不生效 |
+| `LyricScale` | `1` | `0.7`–`1.5`（浮点） | 正在播放页歌词缩放；行级 LRC 与 AMLL（逐字/行级）共用同一系数 |
 | `Background` | `off` | `off` / `cover` / `custom` | 环境色层：关闭 / 封面模糊铺底 / 自定义图片 |
 | `BackgroundImage` | `""` | 绝对路径（单行、无控制字符、≤1024） | 自定义背景图路径；`/api/bg` 白名单扩展名 |
 | `BackgroundBlur` | `70` | `0`–`120`（px） | 背景模糊强度 |
@@ -236,9 +240,9 @@
 
 | 键 | 默认值 | 值域 | 含义 |
 | --- | --- | --- | --- |
-| `Backend` | `MPV` | `MPV` / `Chromium` / `Blink`（旧值，读入归一为 Chromium） | 解码后端 |
-| `AudioDevice` | `auto` | 非空（mpv audio-device 名） | 音频输出设备（仅 MPV） |
-| `Fade` | `normal` | `off` / `short` / `normal` / `long` | 淡入淡出（仅 MPV） |
+| `Backend` | `Liino` | `Liino` / `MPV` / `MPVCompat` / `Chromium`；旧 `Blink` 也接受 | 播放后端。macOS 默认 `MPV`；`MPVCompat` 是 mpv 解码、渲染层出声 |
+| `AudioDevice` | `auto` | 非空（Liino 设备 id 或 mpv audio-device 名） | 音频输出设备 |
+| `Fade` | `normal` | `off` / `short` / `normal` / `long` | 淡入淡出（Liino / MPV；Blink 无此项） |
 | `Volume` | `0.8` | `0`–`1`（浮点） | 音量（静音时保留原值） |
 | `Muted` | `False` | 布尔 | 启动是否静音 |
 | `PrevReplay` | `True` | 布尔 | 上一首：单击重放 / 单击跳上一首 |
@@ -415,8 +419,8 @@
 | 项 | 类型 | 值 | 常量 |
 | --- | --- | --- | --- |
 | 装饰 | `DecorMode` | `csd` / `ssd` | `applyDecor()` → `body.ssd` |
-| 解码后端 | `DecodeBackend` | `MPV` / `Blink`（配置写 `Chromium`） | — |
-| 音频设备 | string | `auto` 或 mpv 设备名 | — |
+| 解码后端 | `DecodeBackend` | `MPV` / `MPVCompat` / `Liino` / `Blink`（配置中写作 `Chromium`） | — |
+| 音频设备 | string | `auto`、Liino 设备 id 或 mpv audio-device 名 | — |
 | 淡入淡出 | `FadePreset` | `off`/`short`/`normal`/`long` | `FADE_PRESETS`：off`{0,0}`、short`{150,120}`、normal`{400,250}`、long`{800,500}`（毫秒） |
 | 音量 | number | `0`–`1` | `getVolume`/`setVolume`（合并落盘） |
 | 静音 | boolean | — | `getMuted`/`setMuted` |
@@ -565,7 +569,7 @@
 | `--menu-edge` | `transparent` |
 | `html[data-menu-glass="off"] .np` | `--menu-surface:#14171f`、`--menu-line:#ffffff1f`、`--menu-edge:transparent` |
 
-> 消费点（八处浮层 + 模态弹窗）：`.ctx-menu`（侧栏歌单/歌曲右键菜单）、`.pb-qpop`（音质）、`.pb-lpop`（播放模式）、`.pb-volpop`（音量）、`.np-menu`（正在播放页更多操作）、`.np-qinfo`（音频流信息）、`.tint-pop`（颜色选择器）、`.queue-panel.float`（浮窗播放列表）；模态弹窗 `.upd-dialog`（更新/本地插件/插件设置）也吃同组令牌。侧栏与 Content View 复用 `--shell-filter`（关闭档实底），不用菜单表面令牌。
+> 消费点（浮层 + 模态弹窗）：`.ctx-menu`（侧栏歌单/歌曲右键菜单）、`.qtip`（自绘提示）、`.pb-qpop`（音质）、`.pb-lpop`（播放模式）、`.pb-volpop`（音量）、`.np-menu`（正在播放页更多操作）、`.np-qinfo`（音频流信息）、`.tint-pop`（颜色选择器）、`.queue-panel.float`（浮窗播放列表）；模态弹窗 `.upd-dialog`（更新/本地插件/插件设置）也吃同组令牌。侧栏与 Content View 复用 `--shell-filter`（关闭档实底），不用菜单表面令牌。
 
 ### C. 运行期由 JS 写入的变量
 
@@ -764,8 +768,10 @@
 | `QUAVER_CROTCHET` | 空 | 调试/内嵌调试端口 |
 | `QUAVER_MPV` | 空 | 显式指定 mpv 可执行体（优先于随包/PATH） |
 | `QUAVER_MPV_ARGS` | 空 | 追加 mpv 参数 |
-| `QUAVER_FFMPEG` | 空 | ffmpeg 路径 |
-| `QUAVER_AUDIO_SINK` / `QUAVER_AUDIO_DIR` / `QUAVER_AUDIO_BACKEND` / `QUAVER_AUDIO_DEVICE` | 空 | 音频相关 |
+| `QUAVER_LIINO` / `QUAVER_LIINO_LIB` | 空 | 显式指定 `libliino` 库文件或所在目录 |
+| `QUAVER_LIINO_DIR` | 空 | 显式指定 Liino 运行时目录 |
+| `QUAVER_AUDIO_BACKEND` | 空 | 启动排障：设为 `liino` 时临时顶掉配置里的后端偏好 |
+| `QUAVER_AUDIO_DIR` | 空 | 显式指定 mpv 运行时目录（排障/自检用） |
 | `QUAVER_CREDENTIAL_MODE` | 空 | `external` = 走 stdin 凭证交接（`QCRED1 {json}`） |
 | `QUAVER_PORT` | — | 端口 |
 | `QUAVER_KEEP_MEDIATOR` | — | 保留 mediator |
@@ -847,7 +853,7 @@
 | `lib/ttml.ts` | `MISS_TTL_MS` | `10 * 60 * 1000`（在线 TTML 未命中负缓存） |
 | `lib/lyric-delay.ts` 持久化键 | `quaver.lyricDelay.v1` | `mid → 毫秒`（本地曲 mid = `local:<trackId>`，同为稳定身份键） |
 | `fake-audio.ts` | `SAMPLE_RATE` / `CYCLES` / `AMPLITUDE` / `VOLUME` / `RETRY_MS` | `8000` / `4` / `32` / `0.01` / `1000` |
-| `shell.ts` | `nav`（6 项：含 `/playlists`）/ `icons` / `routeStack` / `state` | 导航数组 / 图标表 / 路由栈 |
+| `shell.ts` | `nav`（来自 `lib/nav-items.ts`，8 个内置项）/ `icons` / `routeStack` / `state` | 导航数组 / 图标表 / 路由栈 |
 | `views/index.ts` | `loaders` / `loaded` / `inFlight` / `appRoutes` | 懒加载表 / 已解析缓存 / 预取在途 / 宿主自有路由 |
 | `lib/reorder.ts` | `zone` / `max` | `28` / `14` |
 | `lyric.ts` | `TS`（时间戳正则） | `/\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?]/g` |
@@ -885,10 +891,12 @@
 ## 12. 播放器、传输层与音质
 
 - 播放器是模块级单例：`src/player.ts` `export const player`（各视图/组件直接 import；DEV 下另挂 `window.__player` 供 e2e）。**没有** `window.QuaverPlayer`。
+- **音频后端**由主进程 `electron/audio/backend.ts` 统一转发。Linux/Windows 默认 `Liino`：koffi 加载 `libliino`，解码、DSP、缓冲和输出都在主进程内；库没法 `dlopen` 时记录原因并回落到 mpv。macOS 默认 `MPV`，因为 Liino 在该平台仍是实验性后端。`quaver:audio` 通道只注册一个 handler，切换后端时先拆掉旧引擎，再初始化新引擎，避免两个引擎抢同一通道。
+- **mpv 兼容模式**：`MPV` 是 mpv 自己输出音频；`MPVCompat` 让 mpv 只解码，PCM 交给渲染层播放。`Chromium` 完全走浏览器的 `<audio>`。`AudioDevice` 由两个后端共用，但命名空间不同：Liino 用 `pipewire/default` / `null`，mpv 的 `--audio-device` 不认这些值。切到 mpv 时引擎会把它们和空值收回 `auto`，否则 AO 初始化失败，表现为“切到 MPV 后没有声音”。
 - **音质会话覆盖**：播放条选择的档位是会话级（`sessionQuality`，不写 localStorage，重启回设置页默认）；选择永远带 `auto_downgrade`（高档不可及沿回退链降到最优可播档，绝不 403 卡死）。
 - **档位存在性**：`missingTiersOf()` 隐藏上游确认无源的档；`auto` 永远保留；会员锁定档仍展示 🔒 交给自动回退。
 - **收藏写接口的 songType 陷阱**：读接口 `Song.type` 普通歌曲 = `1`，写接口必须发 `0`（`writeSongType`）；发 1 会「静默成功但什么都没发生」。
-- **睡眠抑制执行端**在 sidecar：Linux = xdg 门户 Suspend 位（门户假成功走 Logind 直连）；Windows = `PowerRequestSystemRequired`；macOS = `IOKit PreventUserIdleSystemSleep`。渲染层经 `lib/inhibit.ts` 驱动。
+- **睡眠抑制执行端**在 sidecar：Linux 的 sleep 首选 Logind 直连、XDG 门户兜底；idle 首选 XDG 门户、Logind 兜底。Windows = `PowerRequestSystemRequired`；macOS = `IOKit PreventUserIdleSystemSleep`。渲染层经 `lib/inhibit.ts` 驱动。
 - **假音轨**（`fake-audio.ts`）：维持系统媒体会话（SMTC 等），与用户音量完全解耦。
 - **桌面歌词是独立覆盖层窗**（`electron/desktop-lyrics.ts` + `desktop-lyrics.html`/`src/desktop-lyrics.ts`）：不持有播放器，主窗 player 是唯一事实源，`lib/desktop-lyrics.ts` 单向上行镜像（track/sync），控制与窗口操作走 `quaver:dl-*` 通道；几何公式在 `lib/desktop-lyrics-layout.ts`（纯函数、有真单测）。
 - **MPRIS 真相在主进程**（`electron/mpris.ts`，`mpris-service@2.1.2`；已从外部 daemon 迁回主进程）：`src/mpris.ts` 只是渲染层桥，状态上行 + 命令回程（`quaver:mpris`/`quaver:mpris-cmd`）。
@@ -897,7 +905,7 @@
 
 ## 13. Sparkle 插件系统
 
-Sparkle 是 Quaver 的插件系统。SDK 类型契约在 `vendor/Sparkle/sdk/types.ts`（纯类型、无运行时依赖，773 行）。
+Sparkle 是 Quaver 的插件系统。SDK 类型契约在 `vendor/Sparkle/sdk/types.ts`（纯类型、无运行时依赖，804 行）。
 
 ### 13.1 插件契约
 
@@ -950,7 +958,7 @@ export interface SparklePlugin {
 | `sparkle/host.ts` | 启用/主题状态（`ENABLED_KEY`/`THEME_KEY`/`OFFICIAL_OFF_KEY`） |
 | `sparkle/policy.ts` | 黑名单/安全模式：`sparkRedflag()`、`sparkIdBlacklisted()`、`sparkBlockReason()` |
 | `sparkle/style-layer.ts` | 全站样式层与主题包（`VARIANT_ORDER_BASE=1000`） |
-| `sparkle/settings.ts` | 设置页 Sparkle tab（`CAT_LABEL = {theme,plugin,extension}`，`OFFICIAL_AUTHOR = "team quaver"`） |
+| `sparkle/settings.ts` | 设置页 Sparkle tab（`CAT_LABEL = {theme,plugin}`，`OFFICIAL_AUTHOR = "team quaver"`；旧 `extension` 归入 plugin） |
 | `sparkle/np-view.ts` | 正在播放页插件视图挂载 |
 | `sparkle/theme-tint.ts` | 主题 tint 策略（`off`/`host`/`presets`；`TINT_PRESET_SYSTEM="system"`、`TINT_PRESET_COVER="cover"`） |
 | `sparkle/theme-menus.ts` | 主题菜单外观策略（`off`/`host`） |
@@ -962,7 +970,7 @@ export interface SparklePlugin {
 
 - 官方插件：随宿主静态打包的只有 `die-for-you`。**AMLL 歌词引擎是宿主内置能力**（`src/lyrics/`），不是插件：曾经「内置且不可停用的官方插件 amll」已整体退役，歌词注册规则只有一条——`registry.ts:sparkleKaraokeProvider()` 插件提供器优先，无插件提供器落内置 AMLL（`lyrics/builtin.ts` 动态 import，不进首屏静态闭包）。
 - Marketplace 源码：`vendor/Sparkle/marketplace/{aurora,flowscape,md3,nowplaying-push}`，每目录含 `plugin.json` + `index.ts`。
-- `plugin.json` 字段：`id`(必)、`name`(必)、`version`(必)、`minHostVersion`、`allowBeta`、`author`、`description`、`category`(`theme`/`plugin`/`extension`)、`homepage`。
+- `plugin.json` 字段：`id`(必)、`name`(必)、`version`(必)、`minHostVersion`、`allowBeta`、`author`、`description`、`category`(`theme`/`plugin`)、`homepage`。旧 `extension` 值按 `plugin` 处理。
 - 官方索引：`https://quaver.0w0.red/marketplace.json`；构建产物 `dist/site/`（`marketplace.json` + `sparkle/plugins/<id>.js`）。
 - 三方插件安装目录：`<配置目录>/plugins/<id>/`，经 `/api/sparkle` 加载；id 形状 `SPARKLE_ID_RE`。
 
@@ -988,8 +996,8 @@ export interface SparklePlugin {
 
 | 文件 | 职责 |
 | --- | --- |
-| `main.ts`（约 1,317 行） | 窗口身份、固定端口内置服务、托盘、全局热键、密钥环、Linux 桌面集成、闪屏编排、桌面歌词窗 |
-| `config.ts`（972 行） | quaver.conf（见 §3） |
+| `main.ts`（约 1,715 行） | 窗口身份、固定端口内置服务、托盘、全局热键、密钥环、Linux 桌面集成、闪屏编排、桌面歌词窗 |
+| `config.ts`（约 1,197 行） | quaver.conf（见 §3） |
 | `preload.cts` | 上下文桥（见 §8.2） |
 | `csp.ts` | 页面 CSP（策略文本 + `installAppCsp()`；`session.defaultSession.onHeadersReceived`，只贴应用自己 origin；`script-src` 只有 `'self' blob:`，页面**不许有内联脚本**） |
 | `splash.ts` / `splash-page.ts` / `splash.html` | 启动闪屏：主窗先建后等后端；模板拼装/图标 C2PA 剥离/时序常量纯逻辑（`SPLASH_MIN_MS`）；底色四方同源（`SPLASH_BG_DARK/LIGHT` ⇄ splash.html ⇄ 主窗 backgroundColor ⇄ `style.css --bg`） |
@@ -1006,7 +1014,7 @@ export interface SparklePlugin {
 | `sparkle-version.ts` | 插件版本/宿主版本门 |
 | `linux-desktop.ts` | 桌面文件/图标安装 |
 | `xdg-portal.ts` | XDG 门户 |
-| `audio/*` | 音频引擎：`bins.ts`（mpv 解析）、`engine.ts`、`mpv-ipc.ts`、`mpv-watchdog.ts`、`macho.ts` |
+| `audio/*` | 音频引擎：`backend.ts`（后端选择与切换）、`liino-engine.ts` / `liino-runtime.ts`（Liino FFI）、`engine.ts`（mpv）、`bins.ts`、`mpv-ipc.ts`、`mpv-watchdog.ts`、`macho.ts` |
 | `local/library.ts` | 本地曲库核心（零 electron）：索引/扫描/Range 流/在线刮削/`handleLocalApi` 路由/`revealTarget`（§9.3） |
 | `local/tags.ts` | 标签解析纯函数（ID3v2.2/2.3/2.4+USLT/APIC、ID3v1、Vorbis/FLAC/OGG、MP4 ilst/mvhd、WAV/AIFF、Xing/VBRI/CBR 时长、文件名兜底） |
 | `local/webdav.ts` | WebDAV 客户端（PROPFIND Depth:1 + Basic + Range；NAS 挂载目录按 folder 源处理） |
@@ -1047,7 +1055,7 @@ JSON 层为**宽松解析**（找键名归一化等于 `primary`/`mPrimary`/`acc
 - **`--password-store` 必须在 `app ready` 之前钉死**（Chromium 只在初始化读一次；自定义合成器如 Hyprland/sway 不在白名单 → 不钉会静默退 `basic_text` 假加密）。
 - 探测顺序：桌面名 → `/proc` 守护进程 → 钱包/keyrings 目录 → 保守试 Secret Service；真正算数的是 ready 后 `getSelectedStorageBackend()` 校验。
 - 三级降级：`keyring` → **`memory`（只驻内存，绝不退明文）**；`CredentialStore` 值域里**没有 `file`**，源码里没有写明文路径（`verify:keyring` 有护栏）。
-- 交接前缀 `HANDOFF_PREFIX` 两侧逐字一致：`ui/electron/keyring.ts` ↔ `vendor/Typhoeus/quaver_server/session.py`（含末尾空格）。sidecar 仅在 `QUAVER_CREDENTIAL_MODE=external` 下启用。
+- 交接前缀 `HANDOFF_PREFIX` 两侧逐字一致：`ui/electron/keyring.ts` ↔ `vendor/Typhoeus-go/server/session.go`（含末尾空格）。sidecar 仅在 `QUAVER_CREDENTIAL_MODE=external` 下启用。
 - 日志卫生：sidecar stdout **先按行切**（`drainLines`）**再判前缀**；凭证行不进日志（`credentialSummary` 只报 musicid 与字段长度）。
 
 ### 14.4 托盘
@@ -1123,25 +1131,29 @@ tint / 背景 / 菜单三处的「主题是否接管」判定口径**必须一�
 | `pnpm run app` | 构建 + 启动 Electron |
 | `pnpm run dist` | 构建 + `electron-builder --config ../packages/appimage/arm-x86.yml`（x86_64/aarch64 共用配置，架构由 CLI 决定） |
 | `pnpm run verify:local` | 本地曲库护栏（纯单测 + 真 HTTP e2e：假 sidecar + 假 WebDAV + Range/导入/刮削/清库） |
-| `pnpm run verify:static` | 一次性跑全部静态验证脚本（39 个；含 verify-local / verify-lyrics / verify-desktop-lyrics / verify-mpris / verify-csp / verify-splash / verify-launch） |
+| `pnpm run verify:static` | 一次性跑全部静态验证脚本（当前 47 个；含 verify-local / verify-lyrics / verify-desktop-lyrics / verify-mpris / verify-csp / verify-splash / verify-launch） |
 
 健康检查：`curl -s http://127.0.0.1:5173/index.html | head -5` 应返回 HTML；`curl -s http://127.0.0.1:5173/api/login/status` 验证中继（sidecar 未跑返回 502 JSON 也算中继活着）。
 
 ### 16.2 verify:static 覆盖的脚本
 
-`verify-config`、`verify-prefs-map`、`verify-highlight-contrast`、`verify-song-menu`、`verify-list-tools`、`verify-queue-panel-anim`、`verify-queue-drag`、`verify-noselect`、`verify-user-vip`、`verify-sidebar`、`verify-playlist-menu`、`verify-systheme`、`verify-login`、`verify-keyring`、`verify-daily`、`verify-guess`、`verify-sparkle`、`verify-input-policy`、`verify-streaminfo`、`verify-hotkeys`、`verify-shuffle`、`verify-icon`、`verify-launch`、`verify-splash`、`verify-csp`、`verify-update`、`verify-songtiers`、`verify-mpv`、`verify-tray-title`、`verify-background`、`verify-menu-glass`、`verify-tint`、`verify-accent`、`verify-redflag`、`verify-kana`、`verify-local`、`verify-lyrics`（歌词四件套/繁简真词典/TTML 路由）、`verify-desktop-lyrics`（几何真单测 + 平台闸门 + 源码接线）、`verify-mpris`。
+`verify-config`、`verify-prefs-map`、`verify-listen-report`、`verify-highlight-contrast`、`verify-song-menu`、`verify-song-rows`、`verify-list-tools`、`verify-all-songs`、`verify-queue-panel-anim`、`verify-queue-drag`、`verify-noselect`、`verify-user-vip`、`verify-sidebar`、`verify-playlist-menu`、`verify-systheme`、`verify-login`、`verify-keyring`、`verify-daily`、`verify-guess`、`verify-sparkle`、`verify-input-policy`、`verify-song-match`、`verify-streaminfo`、`verify-stream-guard`、`verify-playback-end`、`verify-hotkeys`、`verify-shuffle`、`verify-icon`、`verify-launch`、`verify-splash`、`verify-csp`、`verify-update`、`verify-songtiers`、`verify-eq`、`verify-mpv`、`verify-tray-title`、`verify-background`、`verify-log-tail`、`verify-menu-glass`、`verify-tint`、`verify-accent`、`verify-redflag`、`verify-kana`、`verify-local`、`verify-lyrics`（歌词四件套/繁简真词典/TTML 路由）、`verify-desktop-lyrics`（几何真单测 + 平台闸门 + 源码接线）、`verify-mpris`。
 
 另有单项：`verify:np-gallery`、`verify:sparkle-market`、`verify:loved-sync`、`verify:songlist-sync`、`verify:flowscape-lyrics`、`verify:lumen-np`（Lumen 主题下 AMLL 深色表面像素级对拍，先 build marketplace）、`verify:lyric-delay`、`verify:volume-bar`、`verify:csp-live`（dist 真跑 Chromium 验 CSP）、`verify:amll-parse`。
 
 ### 16.3 打包关键点
 
 - 公共配置 `packages/electron-builder-base.yml`（`extends` 相对 projectDir `ui/` 解析）：`appId = red.0w0.quaver`、`productName = Quaver Music`、`directories.output = release`、`asar: true`、`files` = `electron/**`、`dist/**`、`package.json`；顶层 `executableName = quaver`、`linux.executableName = red.0w0.quaver`；产物名 `Quaver-${version}-${arch}.${ext}`。
-- `extraResources`：`../dist-bin` 的 `quaver-server*` → `bin`；`build-res/icon.png`、`build-res/icons`、`build-res/tray`；`build-res/audio` → `audio`（随包 mpv 运行时，排除 `*.AppImage` 与 `.work`；由 `scripts/stage-mpv.sh` 解 mpv AppImage 到位，不入库）。外部 `mpris-daemon.cjs` 已移除（MPRIS 迁回主进程 `electron/mpris.ts`）。
+- `extraResources`：`../dist-bin` 的 `quaver-server*` → `bin`；`build-res/icon.png`、`build-res/icons`、`build-res/tray`；`build-res/audio` → `audio`（随包 mpv 运行时，排除 `*.AppImage` 与 `.work`）；`build-res/liino` → `liino`（`libliino` 动态库）。`asarUnpack` 同时展开 `resources/liino/**` 与 `resources/audio/**`，因为 koffi 和 mpv 都只认真实文件路径。
 - AppImage 目标配置：`packages/appimage/arm-x86.yml`（x86_64 与 aarch64 共用，`--x64/--arm64` 决定架构）。
 
 ### 16.4 mpv 运行时解析（`electron/audio/bins.ts`）
 
 优先级：`QUAVER_MPV`（env 显式，不可执行则判不可用、**不回落**）→ 随包运行时（`resolveBundled`）→ 宿主 PATH。`probeRuntime()` 真跑一次 `--version`（跨架构/缺库/系统版本不够都只在执行时才暴露）；CLI `node electron/audio/bins.ts --check <声源根>`。
+
+### 16.5 Liino 运行时解析（`electron/audio/liino-runtime.ts`）
+
+优先用 `QUAVER_LIINO` / `QUAVER_LIINO_LIB` 指定的库文件，其次找 `QUAVER_LIINO_DIR`，再按打包态 `resources/liino`、开发态 `vendor/Liino/build` 的顺序查找。koffi 的 `dlopen` 只认真实文件路径，所以打包时 `libliino` 必须通过 `asarUnpack` 解出来。找不到库不会阻止应用启动，音频会回落到 mpv。
 
 
 ## 附：文档维护提示

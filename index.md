@@ -3,92 +3,77 @@ layout: home
 hero:
   name: Quaver Music
   text: 
-  tagline: 现代、流畅、百变
+  tagline: 现代、流畅、可定制
   image:
     src: /imgs/fav.svg
-    alt: 🤤
+    alt: Quaver Music
   actions:
     - theme: brand
       text: 快速开始
       link: /guide/
     - theme: alt
-      text: 前往 Github
+      text: 前往 GitHub
       link: https://github.com/team-quaver/quaver-music
     - theme: alt
       text: 下载客户端
       link: /download/
 features:
   - icon: 🐧
-    title: 三架构，三系统
-    details: 在 Linux 下开发，支持 ARM 和 X86 平台，实验性支持龙芯平台，并为 Windows/Windows on ARM 与 Mac Apple Silicon 平台构建。
-  - icon: ✨
-    title: 简洁，美观流畅
-    details: 采用百变布局和毛玻璃，为软件设计提供美感，并在这个基础上，以实用简洁为宗旨进行设计
+    title: 跨平台
+    details: 支持 Linux（x86_64、ARM64）、Windows x64/ARM64 与 Apple Silicon macOS。龙芯平台目前提供后端二进制。
+  - icon: 🎧
+    title: 原生音频
+    details: Linux/Windows 默认由 Liino 在进程内解码并直连 PipeWire 或 WASAPI；macOS 默认走 mpv。需要兼容性兜底时，两个平台都可以切换后端。
   - icon: 🌳
-    title: 百变，由你设计
-    details: 基于 Sparkle 插件系统，由你构建，由你定义属于自己的 Quaver Music
+    title: 插件与主题
+    details: Sparkle 可以增加页面、主题、歌词渲染、播放源和菜单项。偏轻量的 Astra 版本不包含插件系统。
   - icon: 🆓
-    title: 社区，自由
-    details: 本软件使用 AGPLv3-or-later 协议，符合 FSF 自由软件四项基本原则。与此同时，我们会为用户提供飞书问卷以调研用户使用。
+    title: 开源
+    details: 使用 AGPL-3.0-only 许可，源码公开，欢迎提交 Issue 和 Pull Request。
 ---
-## 极致体验
 
-Quaver Music 基于 Electron + Vite，并辅以 Sparkle 插件和 Golang MPV 播放后端，为 Q 音听歌体验带来革命。
+## 两个客户端
 
+Quaver Music 是功能完整的桌面客户端。界面使用 Electron + Vite + TypeScript 构建，后端由 Typhoeus-Go 提供，通过 Sparkle 插件系统扩展界面和播放能力。
+
+Quaver Astra 面向不需要插件的用户。它使用 MyGo 原生 UI，不开 WebView，后端直接嵌入进程，播放交给 Liino；macOS 默认改用 mpv 子进程。两版共用 Typhoeus-Go，因此登录、曲库、歌词和音质处理的口径基本一致。
 
 <p align="center">
   <img src="/imgs/1-1home-darklight.webp" width="480">
 </p>
 
-与此同时，我们也为不依赖插件，只需要一个能用的 Q 音第三方客户端的用户打造了 Quaver Astra，基于 MyGO 开发，同样支持 Linux/Windows/macOS，龙芯平台。
-
 <p align="center">
   <img src="/imgs/astra.webp" width="480">
 </p>
 
+## 播放
 
-## 流畅于心
+Liino 把解码、DSP、缓冲和系统输出放在同一进程里。PCM 统一为 48 kHz float32，保留源声道数；输出声道数由设备端点决定，源声道更多时下混，更少时上混。解码后端按平台选择：Linux 使用 ffgo 动态加载系统 FFmpeg；Windows 优先 WinRT MediaSource，再用 Media Foundation 兜底；macOS 优先 AVFoundation，Ogg 交给纯 Go 解码，其他系统解码器不支持的容器再回退 FFmpeg。
 
-得益于 V8 JavaScript 引擎、Golang 后端、Chromium 硬件加速和 LLM 介入的一些冗杂代码优化，我们实现了流畅，舒适的听歌体验。
+需要 mpv 的缓存或断流重连能力时，Quaver Music 和 Astra 都可以切换后端。Astra 在 macOS 上默认使用 mpv，因为 Liino 在该平台仍是实验性后端。
 
-<p align="center">
-  <img src="/imgs/perf.png" width="300">
-</p>
+## 界面
 
-而 Astra 基于 MyGO，基于系统原生 GPU 加速框架，为其带来优秀的。
-
-## 美于现代
-
-基于现代毛玻璃设计，且支持封面提色，系统强调色提色。让 Quaver Music 融入你的桌面。
+两版都使用毛玻璃、封面取色和系统强调色。Quaver Music 支持自绘标题栏、桌面歌词、频谱和多种播放条布局；Astra 沿用同一套动效和正在播放页的视觉语言，但把渲染层换成了原生绘制。
 
 <p align="center">
   <img src="/imgs/nowplaying.webp" width="480">
 </p>
 
-
 <p align="center">
   <img src="/imgs/astra-np.webp" width="480">
 </p>
 
+## 曲库
 
-## 百变于你*
+在线部分通过 QQ 音乐接口读取歌曲、歌单、榜单、每日 30 首和无限电台。Quaver Music 还支持本地文件夹、挂载盘和 WebDAV 曲库，能够扫描标签、自动刮削并导入歌词；匹配到 QQ 曲库的本地歌曲可以使用在线 QRC 逐字歌词。微云音乐网盘中的文件也可以直接加入播放队列。
 
-基于花火插件系统（Sparkle），拥有主题、插件、扩展三个类别，只为打造属于你的 Quaver Music。
+## 歌词
 
-<p align="center">
-  <img src="/imgs/md.png" width="480">
-</p>
+内置歌词引擎支持 QRC、TTML 和 LRC。QRC 与 TTML 提供逐字时间轴、翻译和音译，日文歌词会按 `[kana:]` 元数据显示振假名。没有逐字歌词时回到行级 LRC，桌面歌词窗和正在播放页共用同一份播放状态。
 
-> Quaver Astra 由于架构问题，故不支持插件系统
+## 兼容
 
-## 社区为本
+项目最早是为了解决 Linux 上 QQ 音乐官方客户端不好用的问题，后来扩展到 Windows、macOS 和龙芯后端。Quaver Music 支持 MPRIS、Windows SMTC、macOS Now Playing，以及播放期间的防睡眠请求。
 
-基于 AGPLv3 Only 协议开源，最大程度保证该软件的可持续性与维护性，支持 LLM 贡献（人参与审核）。
-
-## 兼容之道
-
-我们深信，每个桌面平台都不能放弃，Quaver Music 生于 Linux 平台最早是为了解决 Linux 桌面版 QQ 音乐客户端难用的问题。
-
-而在解决了 Linux 的问题后，我们也要将它带入 Windows、macOS，甚至龙芯平台。
-
-## [快来试试！](/download/)
+## [下载试用](/download/)

@@ -1,8 +1,8 @@
 # 花火插件（Sparkle）开发指南
 
-花火插件是 Quaver Music 的插件系统。插件是一个实现 `SparklePlugin` 的对象：在 `setup(ctx)` 里通过 `SparkleContext` 注册扩展点（路由 / 侧栏 / 设置页 / 主题与主题包 / 全站样式层 / 正在播放页 / 真实音频频谱 / 右键菜单 / 播放源 / 歌词渲染），返回的函数（可选）作为 dispose，在插件停用时调用。
+花火插件是 Quaver Music 的插件系统。一个插件就是实现 `SparklePlugin` 的对象：在 `setup(ctx)` 里通过 `SparkleContext` 注册扩展点，包括路由、侧栏、设置页、主题与主题包、全站样式层、正在播放页、音频频谱、右键菜单、播放源和歌词渲染。`setup` 可以返回一个 dispose 函数，插件停用时宿主会调用它。
 
-SDK 与官方插件托管在独立仓库 **quaver-sparkle**，以 git submodule 挂在主仓库的 `vendor/Sparkle`（与 `vendor/Typhoeus` 同模式）。ui 的 Vite 通过 alias 把 SDK 源码级打进 `ui/dist`，该仓库不单独构建：
+SDK 与官方插件托管在独立仓库 **quaver-sparkle**，以 git submodule 挂在主仓库的 `vendor/Sparkle`。ui 的 Vite 通过 alias 把 SDK 源码一起打进 `ui/dist`，所以这个仓库不单独构建：
 
 ```ts
 // ui/vite.config.ts
@@ -10,18 +10,18 @@ SDK 与官方插件托管在独立仓库 **quaver-sparkle**，以 git submodule 
 { find: "@quaver/sparkle",     replacement: ".../vendor/Sparkle/sdk/index.ts" },
 ```
 
-本页服务两类读者：**插件作者**（写插件、打包分发）看到[宿主侧实现](#宿主侧实现)之前就够用；**宿主贡献者**（改宿主接线、动 SDK 契约）直接从那一节读起。
+插件作者读到「第三方插件：打包、安装与调试」就够了；要改宿主接线或 SDK 契约，再继续看[宿主侧实现](#宿主侧实现)。
 
 ## 两类插件
 
 | | 官方插件（`kind: "official"`） | 第三方插件（`kind: "third-party"`） |
 |---|---|---|
 | 形态 | 源码在 quaver-sparkle 的 `plugins/<id>/`，随宿主静态打包（Vite 代码分割，启用才加载） | ESM **单文件** `main.js`，安装到配置目录 `plugins/<id>/`，运行时动态 `import()` |
-| 默认状态 | 默认启用（用户显式停用后不再自动启用） | 安装后默认**关闭**，需手动启用 |
+| 默认状态 | 默认启用（用户显式停用后不再自动启用） | 安装后默认**关闭**，需手动启用；`theme` 分类例外，安装后自动启用 |
 | 依赖 | 可正常 import 任何随宿主打包的依赖 | 必须**自包含**：运行时 URL 下没有 bare import 解析，依赖要全部打进这一个文件 |
 | 分发 | 随宿主更新 | Marketplace 索引 + 主进程代下载，或本地手装 |
 
-注意：Marketplace 里的「官方收录」说的是索引来源，不是 `kind: "official"`。目录 `plugins/` 下、与宿主一起打包的才是 official；`marketplace/` 下的 MD3（Lumen）、Flowscape 等仍按第三方插件安装，清单里写 `kind: "third-party"`。
+Marketplace 里的「官方收录」说的是索引来源，不是 `kind: "official"`。目录 `plugins/` 下、与宿主一起打包的才是 official；`marketplace/` 下的 MD3（Lumen）、Flowscape 等仍按第三方插件安装，清单里写 `kind: "third-party"`。
 
 插件作者唯一需要 import 的模块是 SDK 入口：
 
@@ -62,7 +62,7 @@ export default definePlugin({
 
 > **版本门禁**：`minHostVersion` 按 SemVer 比较，当前宿主低于它时**拒绝安装**；`allowBeta: true` 额外放行「同一 `x.y.z` 的预发布宿主」（不能让更旧的 Beta 越过最低版本，缺省 false）。`nightly` 构建（main 末端，版本号沿用上一次发布号）一律视为**高于一切最低版本**——面向未发布版本写的插件在 nightly 上可直接加载。
 
-现成示例按难度排：
+可以从这些例子入手，按复杂度排列：
 
 - `plugins/die-for-you/index.ts` — `registerSettingsSection` 的最小集成与 dispose 写法；
 - `marketplace/nowplaying-push/index.ts` — 订阅 `ctx.player.on()`、用 `ctx.storage` 保存设置、切歌去重与 Webhook 推送；
@@ -354,7 +354,7 @@ ctx.registerKaraokeProvider({
 | `registerStyleLayer` | 注入**任意 CSS**，常驻生效（不参与选择）           | 无（随插件启停）                       |
 | `registerThemePack`  | 多套完整风格，用户挑一套                       | 设置 → **花火插件** → 主题 → 「主题风格」 |
 
-后两个是后加的扩展点，为的是解决一个实测问题：宿主样式表里有 405 处 `var()` 引用，但同时有 182 个色值字面量、73 处 `border-radius`、28 处 `box-shadow`——**硬编码**。想做 Material Design 3 / 毛玻璃 / 极简大字这种「圆角体系、阴影层级、组件形态全换一遍」的主题，变量组远远不够，必须能注入任意 CSS。
+后两个扩展点是后加的，起因很具体：宿主样式表里有 605 处 `var()` 引用，另有 190 个十六进制色值、121 处 `border-radius`、34 处 `box-shadow`，这些都没有走变量。想做 Material Design 3 / 毛玻璃 / 极简大字这种「圆角体系、阴影层级、组件形态全换一遍」的主题，变量组远远不够，必须能注入任意 CSS。
 
 ### 变量级主题
 
@@ -381,7 +381,7 @@ ctx.registerTheme({
 | --- | --- | --- |
 | **不写 `tint`**（默认） | 主题 | 宿主**让位**：不再写那几个变量，`--cvg-accent` 回落 `:root { --cvg-accent: var(--acc) }`。你只要在 `css` 里覆盖 `--acc`，高亮色就跟着走。设置页的「高亮颜色」整组禁用并注明由你接管 |
 | `tint: { mode: "host" }` | 用户 | 宿主那四档照常生效，用户可自由改 |
-| `tint: { mode: "presets", presets: [...] }` | 用户（在你的方案里挑） | 你在设置页提供几套高亮方案，用户选一套。`presets[0]` 是默认；`color` 必须是 `#rgb` / `#rrggbb` 或哨兵值 `"system"`（跟随系统强调色）、`"cover"`（跟随当前封面主色），`id`/`label` 非空且 `id` 不重复，非法项会被忽略 |
+| `tint: { mode: "presets", presets: [...] }` | 用户（在你的方案里挑） | 你在设置页提供几套高亮方案，用户选一套。`presets[0]` 是默认；`color` 必须是 `#rgb` / `#rrggbb`，或哨兵值 `"system"`（跟随系统强调色）、`"cover"`（跟随当前封面主色）、`"custom"`（让用户自选颜色）。`id`/`label` 非空且 `id` 不重复，非法项会被忽略 |
 
 ```ts
 // 1) 不写 tint：主题自带强调色（下面 --acc 的紫），宿主让位 → 高亮色跟着紫走
@@ -468,7 +468,7 @@ ctx.registerTheme({ id: "t2", name: "T2", css: `…`, background: { mode: "host"
 | **不写 `menus`**（默认） | 主题 | 宿主**让位**：不再往 `<html>` 写 `data-menu-glass` 的 on/off，设置页的「菜单毛玻璃」整组禁用并注明由你接管。你在 `css` 里覆盖那几个 `--menu-*` 令牌即可——`html[data-sparkle-theme="<id>"]` 的特异性本来就高于 `:root` |
 | `menus: { mode: "host" }` | 用户 | 用户那棵开关照常生效。你就**别**再写 `--menu-*` 了——写了会被开关盖掉 |
 
-消费这套令牌的七处菜单（想直接按选择器重画形态就用这些类名）：`.ctx-menu`（侧栏歌单 / 歌曲右键菜单）、`.pb-qpop`（音质）、`.pb-lpop`（播放模式）、`.pb-volpop`（音量）、`.np-menu`（正在播放页「更多操作」）、`.np-qinfo`（音频流信息）、`.tint-pop`（设置页颜色选择器）。注意 `.np`（正在播放页）对同名令牌另有一套深色值，想连那一页一起改就写 `html[data-sparkle-theme="<id>"] .np { --menu-surface: … }`。
+消费这套令牌的浮层包括（想直接按选择器重画形态就用这些类名）：`.ctx-menu`（侧栏歌单 / 歌曲右键菜单）、`.qtip`（自绘提示）、`.pb-qpop`（音质）、`.pb-lpop`（播放模式）、`.pb-volpop`（音量）、`.np-menu`（正在播放页「更多操作」）、`.np-qinfo`（音频流信息）、`.tint-pop`（设置页颜色选择器）、`.queue-panel.float`（浮窗播放列表）；模态弹窗 `.upd-dialog` 也吃同组令牌。`.np`（正在播放页）对同名令牌另有一套深色值，想连那一页一起改就写 `html[data-sparkle-theme="<id>"] .np { --menu-surface: … }`。
 
 ```ts
 // 1) 不写 menus：主题自带菜单外观（比如把右键菜单做成不透明的大圆角卡片），宿主让位
@@ -576,7 +576,7 @@ ctx.registerThemePack({
 1. 别用 `position: fixed` 自绘层盖住右上角窗口按钮簇（`.winbtns`，z-index 90）。
 2. 别把 `--font-default` 之外的字体族写死到 `body` 级别——用户在 设置 → 外观 选的界面/歌词字体会被你的 `body { font-family: … }` 顶掉。
 
-> 顺带一提：变量级主题（`registerTheme`）在 设置 → **外观** 里切，主题包（`registerThemePack`）在 设置 → **花火插件 → 主题** 里切。两处别搞混——「花火插件」面板的「主题」标签只管启停提供它的插件，不管变量级主题的选择。
+> 另外，变量级主题（`registerTheme`）在 设置 → **外观** 里切，主题包（`registerThemePack`）在 设置 → **花火插件 → 主题** 里切。「花火插件」面板的「主题」标签只管启停提供它的插件，不管变量级主题的选择。
 
 ## 整页接管正在播放页
 
@@ -731,7 +731,7 @@ Marketplace 是一个**静态 JSON 索引** + 主进程代下载的最小分发�
 - `minHostVersion` 可选，插件要求的最低宿主版本（SemVer）；当前宿主低于它时拒绝安装。`allowBeta` 可选布尔（缺省 `false`），为 `true` 时额外放行「同一 `x.y.z` 的 Beta 宿主」；`nightly` 构建一律视为满足最低版本。
 - `category` 是设置页分类：`theme`（主题）/ `plugin`（插件）；缺省、未知值与旧 `extension` 一律按 `plugin` 归档（「扩展」标签已撤，历史安装照常显示在「插件」里）。
 - 索引源固定为 `market/default-index.ts` 的 `DEFAULT_MARKET_URL`（`https://quaver.0w0.red/marketplace.json`），UI 内不可更改；设置页不再展示索引链接，只保留刷新与「添加本地插件」入口（早期版本的 `quaver.sparkle.market.url.v1` 覆盖已废弃）。
-- 安装成功后默认关闭，需在「插件」分类里手动启用；支持卸载与重新安装（重新安装即更新到最新发布版）。
+- 普通插件安装后默认关闭，需在「插件」分类里手动启用；`theme` 分类安装后会自动启用，失败时提示到「主题」标签手动打开。支持卸载与重新安装（重新安装即更新到最新发布版）。
 - 官方索引由 quaver-sparkle 仓库的 `marketplace/` 目录经 CI 构建发布到 quaver-doc 站点；当前源码包括 Aurora、MD3（Lumen 流光，目录名 `md3/`）、Flowscape 与 NowPlaying 推送。详见 quaver-sparkle 的 `docs/marketplace.md`、`marketplace/README.md` 与 `.github/workflows/marketplace.yml`。
 - 随宿主打包的 official 插件（目前是 `plugins/die-for-you/`）不进 Marketplace 源码目录，避免 id 与安装目录撞车。
 

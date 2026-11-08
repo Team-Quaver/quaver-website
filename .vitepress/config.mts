@@ -193,6 +193,7 @@ export default defineConfig({
           { text: '前端 - Astra', link: '/dev/frontend-astra' },          
           { text: '花火插件 - Sparkle', link: '/dev/sparkle' },
           { text: 'Typhoeus', link: '/dev/typhoeus' },
+          { text: 'Liino', link: '/dev/liino' },
           
         ],
       },

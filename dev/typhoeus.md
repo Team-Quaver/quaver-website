@@ -1,11 +1,11 @@
-# Typhoeus / Typhoeus-Go 开发指南
+# Typhoeus-Go 开发指南
 
-> 本指南覆盖 Quaver 的本地后端：**Typhoeus-Go**（`vendor/Typhoeus-go`，现行主后端，Golang sidecar）与遗留 **Typhoeus** 仓库目前唯一存活的部分（`vendor/Typhoeus/mpris`，Linux MPRIS 守护进程）。
-> 目标与前端指南一致：**所有变量、所有取值域、所有端点、所有外部契约**登记在此，并做分类。读完即可上手改。
+> 本指南覆盖 Quaver 的本地后端 Typhoeus-Go（`vendor/Typhoeus-go`）。它负责登录、账号数据、音质协商、解密、流中继和内容域接口；Quaver Music 由 Electron 主进程以 sidecar 方式启动它，Quaver Astra 则把它嵌在进程内。
+> 常用的变量、取值域、端点和外部契约都登记在这里，按主题分类。Linux MPRIS 已经迁回 Electron 主进程，不再属于这个仓库，相关接线放在 §18 说明。
 >
-> 适用范围：仓库 `/home/ne0w0r1d/Desktop/quaver`（Go 后端在 `vendor/Typhoeus-go/`，MPRIS 在 `vendor/Typhoeus/mpris/`，接线在 `ui/`）。常量以当前 main 为准。
+> 适用范围：Quaver Music 仓库的 `vendor/Typhoeus-go/` 与 `ui/` 中的接线。常量和行号以当前 main 为准。
 >
-> **不写入本指南的部分**：Typhoeus 的 Python 后端（`typhoeus/`、`quaver_server/`）已从旧仓库整体删除（"Remove Python"，2026-09），现行代码不再引用它——按「用不到的不写」原则不再展开；旧 README 仅作历史参考。
+> Typhoeus 的 Python 后端已经删除，现行代码不再引用。本指南只描述 Go 实现；旧 README 仅作历史参考。
 
 ## 目录
 
@@ -26,7 +26,7 @@
 15. [QMCv2 解密](#15-qmcv2-解密)
 16. [QRC 逐字歌词解密](#16-qrc-逐字歌词解密)
 17. [电源抑制 inhibit](#17-电源抑制-inhibit)
-18. [MPRIS 守护进程（遗留 Typhoeus 存活部分）](#18-mpris-守护进程)
+18. [MPRIS（主进程）](#18-mpris主进程)
 19. [前端接线契约（ui/）](#19-前端接线契约ui)
 20. [构建、测试与调试](#20-构建测试与调试)
 21. [硬约束与红线清单](#21-硬约束与红线清单)
@@ -45,11 +45,11 @@ Electron 主进程 spawn                          │                           
 stdin 注入 QCRED1 ─────────────────────────────┤                            ├ ssl.ptlogin2.qq.com / graph.qq.com（QQ 登录）
 stdout 收回 QCRED1 ────────────────────────────┤                            ├ open.weixin.qq.com / lp.open.weixin.qq.com（微信登录）
                                                │                            ├ mu.y.qq.com:443 MQTT 5.0 over WSS（手机扫码）
-Electron 主进程 ──stdio NDJSON──> mpris-daemon ─┤                            ├ api.tencentmusic.com/tme/trpc/proxy（QIMEI）
+Electron 主进程 ──mpris-service──> D-Bus       │                            ├ api.tencentmusic.com/tme/trpc/proxy（QIMEI）
 （Linux；win/mac 走 navigator.mediaSession）    └── Range 回源 ──> 音频 CDN（sip 列表 / isure.stream 兜底）
 ```
 
-- **定位**：Typhoeus-Go 负责「与 QM 上游的全部协议 + TypeScript 不便做的系统集成」；音质协商、解密、中继、登录、会员、内容域全部在 Go 侧；渲染层只做视图与播放策略。
+- **定位**：Typhoeus-Go 负责与 QQ 音乐上游通信，并处理 TypeScript 不擅长的二进制协议。音质协商、解密、中继、登录、会员和内容域都在 Go 侧；渲染层只做视图和播放策略。
 - **后端自述**：`GET /` → `{"backend":"typhoeus-go/QQMusicApi","version":"0.2.0"}`（`server/app.go handleRoot`）。
 - **统一信封**：成功 `{code:0, msg:"ok", data:…}`；失败 `{code:-1|-<status>, msg:…}` + 对应 HTTP 状态码。
 
@@ -57,13 +57,13 @@ Electron 主进程 ──stdio NDJSON──> mpris-daemon ─┤                
 
 | 阶段 | 后端 | 现状 |
 | --- | --- | --- |
-| 打样 / 1.0 / 1.1 | L-1124 Python API（FastAPI sidecar） | 已删除（submodule 里仅剩 `mpris/`） |
+| 打样 / 1.0 / 1.1 | L-1124 Python API（FastAPI sidecar） | 已删除 |
 | Typhoeus 1.0 | Python `typhoeus/` + `quaver_server/` | 已删除；职责全部由 Go 承接（且支持加密档解密，这是 Python 版从未有的） |
-| 现行 | **Typhoeus-Go**（Golang 1.26，零 cgo 依赖除 purego/godbus） | 主链路 |
+| 现行 | **Typhoeus-Go**（Go 1.27.3，纯 Go，无 cgo 依赖） | 主链路 |
 
 ## 2. 模块地图
 
-`vendor/Typhoeus-go/`（module path `github.com/team-quaver/typhoeus-go`，Go 1.26）：
+`vendor/Typhoeus-go/`（module path `github.com/team-quaver/typhoeus-go`，Go 1.27.3）：
 
 | 包 | 文件 | 职责 |
 | --- | --- | --- |
@@ -98,13 +98,6 @@ Electron 主进程 ──stdio NDJSON──> mpris-daemon ─┤                
 | `inhibit` | `inhibit{,_linux,_darwin,_windows,_other}.go` | 电源抑制：Linux 双通道（sleep→Logind 直连优先、idle→XDG 门户优先，互为兜底）、macOS IOKit、Windows PowerRequest；`inhibit.Logf` 钩子由 server 接线打转移/降级日志 |
 | `tools/` | `gen_qmc_vectors.py`、`qmc_ref.py` | 开发用：生成 QMC 解密测试向量（非运行时依赖） |
 
-`vendor/Typhoeus/`（git submodule `quaver-typhoeus`）：
-
-| 路径 | 职责 |
-| --- | --- |
-| `mpris/src`（`main.ts/ipc.ts/types.ts`） | MPRIS 2.0 D-Bus 守护进程（pnpm + esbuild 打包为单文件 CJS） |
-| `mpris/dist/mpris-daemon.cjs` | 构建产物；开发态由主进程 spawn，打包态进 `<resources>/mpris/` |
-
 ## 3. 环境变量全量
 
 **Go sidecar 读取的**（`cmd/quaver-server` + `server/session.go` + `qqmusic/client.go`）：
@@ -134,13 +127,13 @@ Electron 主进程 ──stdio NDJSON──> mpris-daemon ─┤                
 | `PORT` | `4176` | 独立跑 `node electron/native-server.ts` 时的页面端口 |
 | `QUAVER_SPARKLE_DIR` | — | 第三方插件根目录（与 Typhoeus 无关，列此防混淆） |
 
-**MPRIS daemon 读取的**（`vendor/Typhoeus/mpris/src/main.ts`）：
+**MPRIS 相关**（`ui/electron/mpris.ts`）：
 
 | 变量 | 默认 | 说明 |
 | --- | --- | --- |
-| `ELECTRON_RUN_AS_NODE` | 主进程置 `1` | 用 Electron 自带 Node 跑 `.cjs`，打包态不依赖系统 node |
-| `QUAVER_MPRIS_NAME` | `quaver` | D-Bus 名后缀：`org.mpris.MediaPlayer2.<name>` |
-| `QUAVER_MPRIS_IDENTITY` | `Quaver`（主进程实际传 `Quaver Music`） | 桌面媒体控件里显示的播放器名 |
+| `FLATPAK_ID` | 未设 | 设置后作为 `DesktopEntry`；未设时用 `red.0w0.quaver` |
+
+总线名固定为 `org.mpris.MediaPlayer2.quaver`，Identity 为 `Quaver Music`，不再通过环境变量覆盖。
 
 ## 4. 端口、配置目录与文件
 
@@ -768,37 +761,54 @@ TEA（`tea.go`）：16 轮，`teaDelta = 0x9E3779B9`（与标准 TEA 相同）�
 
 **为什么 sleep 走 Logind 直连**（2026-10-20 修复的源头）：不成熟的窗管/桌面（实测 Hyprland + xdg-desktop-portal-gtk）下门户可能应答 `code=0`，却没有任何后端真正登记抑制——「假成功」。睡眠最终由 logind 执行，门户的 Response=0 不能作为 sleep 抑制生效的可靠依据，故 **sleep 首选 Logind 直连、门户只做兜底**。反过来，桌面空闲多由会话/合成器管理，logind 的 idle inhibitor 不一定拦得住合成器自己的 idle 定时器，故 **idle 仍以门户优先**。门户路径不以「systemd-logind/elogind 的 inhibitor 列表里有没有自己」作验收条件——桌面会话服务可能代表本进程持有实际抑制。两条通道互斥：acquire 定道，持有期不换道（release 各清各的）。
 
-## 18. MPRIS 守护进程
+## 18. MPRIS（主进程）
 
-> 这是遗留 Typhoeus 仓库**目前唯一存活的部分**（Python 后端已删）。Linux 专用；Windows/macOS 由渲染层 `navigator.mediaSession` 直驱（SMTC / Now Playing，纯 TS 不经主进程）。计划迁移回前端或整合进 Go。
+Linux 的 MPRIS 服务现在直接跑在 Electron 主进程里，不再启动 `mpris-daemon` 子进程，也没有单独的构建产物。Windows 和 macOS 仍由渲染层的 `navigator.mediaSession` 驱动 SMTC 与 Now Playing。
 
-### 18.1 进程拓扑与线协议
+### 18.1 调用链
 
 ```
-渲染层 ui/src/mpris.ts ──ipc(quaver:mpris / quaver:mpris-cmd)── Electron main ──stdio NDJSON──> mpris-daemon ──D-Bus──> org.mpris.MediaPlayer2.quaver
-   状态快照（离散变化推 + 5s 心跳纠偏）                        spawn(ELECTRON_RUN_AS_NODE=1)     │
-   控制命令执行（toggle/next/seek/volume/mode…）  <── cmd ──────────────────────────────────────┘
+渲染层 ui/src/mpris.ts ──ipc(quaver:mpris / quaver:mpris-cmd)── Electron main
+   状态快照（离散变化推 + 5s 心跳纠偏）                          electron/mpris.ts
+   控制命令执行（toggle/next/seek/volume/mode…）  <── cmd ────────┘
+                                                                  │
+                                                            mpris-service
+                                                                  │
+                                                        D-Bus 会话总线
 ```
 
-`mpris/src/types.ts`：`PROTOCOL_VERSION = 1`；每行一个 JSON。
+渲染层每 5 秒推一次快照，播放状态、曲目、循环等离散变化会立即推送。主进程按快照里的 `posUs` 外推当前位置，`playerctl position` 这类查询拿到的不是每帧刷新的 IPC 值。
 
-**入向 `state`（渲染层→daemon）**：`{v:1, t:"state", status:"Playing|Paused|Stopped", posUs(微秒), volume(0..1,静音=0), loop:"None|Track|Playlist", shuffle, seeked?, track|null, queue[](≤200 截断), can{next,prev,play,pause,seek,control}}`。
+### 18.2 协议与常量
 
-**出向**：`hello{identity}`（握手就绪）；`cmd`：`play/pause/playpause/stop/next/prev/raise/quit/present`、`volume{value}`、`setLoop{loop}`、`setShuffle{on}`、`seek{deltaUs}`、`seekTo{posSec,trackId?}`、`jump{trackId}`、`openUri{uri}`。`raise/quit` 由主进程消费（showWindow/app.quit），其余转渲染层执行——**UI 永远是唯一事实源**，总线侧写入回流到 UI 状态。
+`src/mpris.ts` 的 `MprisState` 与 `electron/mpris.ts` 的 `MprisCommand` 共用 `v: 1`。快照包含：
 
-| 规则 | 值/语义 |
+```ts
+{
+  v: 1, t: "state",
+  status: "Playing" | "Paused" | "Stopped",
+  posUs: number, volume: number,
+  loop: "None" | "Track" | "Playlist",
+  shuffle: boolean, seeked?: boolean,
+  track: MprisTrack | null,
+  queue: MprisTrack[],  // 最多 200 条
+  can: { next, prev, play, pause, seek, control }
+}
+```
+
+控制命令包括 `play/pause/playpause/stop/next/prev/raise/quit`、`volume`、`setLoop`、`setShuffle`、`seek`、`seekTo`、`jump` 和 `openUri`。`raise`、`quit` 由主进程处理，其余命令交回渲染层执行。UI 仍是播放状态的唯一事实源。
+
+| 项 | 值 |
 | --- | --- |
-| 总线名 | `org.mpris.MediaPlayer2.$QUAVER_MPRIS_NAME`（默认 `quaver`）；Identity=`QUAVER_MPRIS_IDENTITY`（主进程传 `Quaver Music`） |
-| trackid | `/org/quaver/track/<key 安全化>`：非 `[A-Za-z0-9_]` 全替换 `_`、去首尾 `_`、空→`unknown`；key=`_key ?? mid`（同 mid 多版本去重）；渲染端 jump 反解用同一规则 |
-| 幂等 | daemon 端 diff 后才写总线属性（音量钳 0..1、can 串、trackKey、queue 签名）；任意一帧丢失由下一帧纠偏 |
-| 位置外推 | 位置不进高频通道：daemon 以收到帧的 `posUs` 为基准单调外推（Playing 时 +dt、钳到时长），`playerctl position` 平滑 |
-| 队列 | TrackList 数据源 ≤200（`player.queue.slice(0,200)`） |
-| 心跳 | 渲染层 `HEARTBEAT_MS = 5000`（离散变化即时推，低频纠偏；播放中无逐秒 IPC） |
-| daemon 路径 | 打包：`<resources>/mpris/mpris-daemon.cjs`（extraResources）；开发：`vendor/Typhoeus/mpris/dist/mpris-daemon.cjs`（缺则跳过 MPRIS） |
-| 崩溃重拉 | 快速退出（存活 <5000ms 且 code≠0）= 无 D-Bus 会话，不重试；活过之后的崩溃退避重拉 `2000ms×n`，最多 3 次 |
-| 已知库坑 | mpris-service 2.1.2：`HasTrackList` 默认 false 且不自动同步（手动 `player.hasTrackList=true`）；`addTrack()` this 引用错误（只走 `tracks` 整表替换） |
-| 构建 | `cd ui && pnpm run mpris:build`（pnpm install + esbuild → 自包含 CJS，唯一外置 x11 且永不加载）；e2e：`node test/e2e.mjs`（需活动会话总线，14 项断言） |
-| win/mac 边界 | SMTC/Now Playing 标准按钮只有 play/pause/prev/next/seekto；循环/随机/音量系统侧不暴露 |
+| 总线名 | `org.mpris.MediaPlayer2.quaver` |
+| Identity | `Quaver Music` |
+| DesktopEntry | `FLATPAK_ID` 或 `red.0w0.quaver` |
+| trackid | `/org/quaver/track/<key>`；`key` 优先取 `_key`，否则用 `mid`，非字母数字下划线替换为 `_` |
+| 队列 | `player.queue.slice(0, 200)` |
+| 心跳 | `HEARTBEAT_MS = 5000` |
+| 无会话总线 | 返回 `null`，不阻断应用启动 |
+
+`mpris-service@2.1.2` 有两个已知行为：`HasTrackList` 默认是 false，也不会自动同步，需要手动设置；`addTrack()` 的 `this` 引用有问题，所以只替换整张 `tracks` 表，不逐条添加。
 
 ## 19. 前端接线契约（ui/）
 
@@ -844,22 +854,20 @@ QUAVER_PORT=3200 ./typhoeus-go            # 默认 http://127.0.0.1:3200（memor
 go test ./...                             # 单测全部无网络依赖（qmc 向量、resolver 假 provider、
                                           # compat 形状、sign/qrc/vip/login 解析等）
 
-# MPRIS
-cd ui && pnpm run mpris:build             # → vendor/Typhoeus/mpris/dist/mpris-daemon.cjs
-
 # 前端整包（含 sidecar 拉起）
 pnpm run dev / pnpm run app               # 主进程 spawn，QCRED1 走 stdin/stdout
 ```
 
 ### 20.2 CI（`.github/workflows/build.yml`）
 
-- 纯 Go 交叉编译（websocket 唯一直接依赖，零 cgo）：单 ubuntu runner 出全矩阵——
+- 纯 Go 交叉编译（不依赖 cgo）：GitHub Actions matrix 中每个目标在 `ubuntu-24.04` runner 上交叉编译——
 
 | arch_label | GOOS/GOARCH | 产物 |
 | --- | --- | --- |
 | linux-x86_64 | linux/amd64 | `quaver-server-x86_64` |
 | linux-aarch64 | linux/arm64 | `quaver-server-aarch64` |
-| windows-x64 / windows-arm64 | windows | `quaver-server.exe` |
+| windows-x64 | windows/amd64 | `quaver-server.exe` |
+| windows-arm64 | windows/arm64 | `quaver-server.exe` |
 | macos-arm64 | darwin/arm64 | `quaver-server` |
 | linux-loong64 | linux/loong64 | `quaver-server-loong64`（只出 sidecar；Electron/mpv 上游不发 loong64） |
 
@@ -906,6 +914,6 @@ pnpm run dev / pnpm run app               # 主进程 spawn，QCRED1 走 stdin/s
 16. `GET /song/{value}/detail` 等 `{value}` 通配段数字/字符串双栖（`isDigits` 分流 songId/songMid）；路由用 Go 1.22 模式语法，字面量段优先于通配段（`/songlist/fav/check` 与 `/songlist/{id}/detail` 共存即靠此）。
 17. `POST /song/urls` 顶层 `file_type` 整段缺省得到 0（DTS_X）——调用方需要默认档请显式传 13；per-item 传 `null` 才是继承。
 18. **Linux inhibit 通道优先级不可回退成「单门户路径」**：sleep 必须 Logind 直连优先（不成熟桌面/窗管下门户会假成功——Response=0 但无人登记抑制）；idle 保持门户优先（合成器空闲定时器不归 logind 管）。定道后持有期不换道、门户响应按 Request 路径过滤——都是 2026-10-20 修复的组成部分，别「统一」掉。
-19. MPV/FFmpeg 集成与 MPRIS 回迁仍在计划中（与本文档无关，但改 MPRIS/inhibit 前先读 §17/§18 的进程拓扑）。
+19. MPRIS 已经在主进程内实现，不再有 `mpris-daemon` 或 `mpris:build`。改 MPRIS 前先读 §18 的调用链；改音频后端前读前端指南 §12。
 
 > 维护提示：本指南与代码同仓演进。新增常量/端点/错误码时，请在对应表格登记；删档（如本轮的 Python 后端）请同时从指南移除对应章节。

@@ -31,7 +31,7 @@ APM 包目前测试下来出现性能问题的要求如下：
 - Electron Wayland 模式
 - Quaver Design 主题更为严重
 
-目前请尝试使用系统包管/AppImage 解决，或请在 Desktop 文件加入 `--ozone-platform=x11` 缓解。
+目前请尝试使用系统包管理器安装的版本或 AppImage，或在 Desktop 文件里加入 `--ozone-platform=x11` 缓解。
 
 我们正在尝试联系星火方着手解决该问题。
 
@@ -49,4 +49,4 @@ APM 包目前测试下来出现性能问题的要求如下：
 
 由于 GNOME 基金会旗下 Flathub 目前针对 LLM 开发的应用程序策略过于的夸张，故我们将会尽量自维护 Flatpak 包。
 
-更新机制将会和 RPM/Debian 包一致，1.6 见！
+更新机制也会和 RPM/Debian 包保持一致。

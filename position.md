@@ -15,13 +15,13 @@
 
 播放音乐禁止睡眠/画廊模式禁止熄屏的功能实现
 
-目前实现为：XDG 桌面门户优先 -> Logind 兜底
+目前分两条通道：睡眠抑制走 Logind 直连优先、XDG 门户兜底；空闲抑制走 XDG 门户优先、Logind 兜底。睡眠最终由 Logind 执行，部分桌面门户会回报成功却没有真正登记抑制，所以不能把门户当成睡眠抑制的唯一依据。
 
 与以下标准同理
 - Windows 电源请求
 - macOS 电源断言
 
-## XDG Backgrond 
+## XDG Background
 
 虽然是 XDG 标准，但目前仅限 GNOME 优先使用，多数桌面/WMShell 自带 Tray/KStatusNotifierItems，且已经实现了托盘，故不可能单纯为无 Tray 环境的 GNOME 实现后台应用，请 GNOME 用户自行安装 `AppIndicator and KStatusNotifierItems support` 扩展。
 
@@ -33,11 +33,11 @@
 
 私心来说，我的 Rust 能力实在不行。与此同时，Rust 前端技术栈也没有十分适合这个软件的选择，GPUI 有 Lyrune 了没必要重造轮子。
 
-与此同时，我们已经迁移至 Go，复用 Go 后端的，非 WebView 版本的 Quaver Astra 也正在开发
+与此同时，我们已经迁移至 Go；复用 Go 后端、非 WebView 的 Quaver Astra 也已经落地。
 
 ## 跨平台
 
-我们已经实现三大系统，三大架构的构建
+我们已经实现三大系统、多个架构的构建
 
 - Windows
 	- AMD64

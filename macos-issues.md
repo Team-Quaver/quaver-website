@@ -7,12 +7,12 @@ macOS 也算一个重要的平台之一，但由于财力等问题，我们无�
 macOS 由于存在门禁系统，会导致无签名程序无法正常运行，请使用以下指令执行
 
 ````none
-sudo xattr -rd com.apple.quarantine /Application/quaver.app
+sudo xattr -rd com.apple.quarantine "/Applications/Quaver Music.app"
 ````
 
 ## 无法播放音乐
 
-由于 Mach-O 目前最低标准是 macOS 14, Ventura 以下的版本无法正常使用 MPV 后端，请切换至 Blink 后端，或更新至最新系统
+由于 Mach-O 目前最低标准是 macOS 14，Ventura 以下的版本无法正常使用 MPV 后端。可以切换到「兼容模式（Blink）」（配置里写作 `Chromium`），或更新到较新的系统。
 
 ## 大 托 盘
 
