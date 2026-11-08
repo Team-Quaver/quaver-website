@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-10-25T14:15:21.744Z",
+  "updated": "2026-11-08T12:02:17.560Z",
   "plugins": [
     {
       "id": "aurora",
@@ -48,6 +48,16 @@
       "download": "https://quaver.0w0.red/sparkle/plugins/nowplaying-push.js",
       "homepage": "https://github.com/Team-Quaver/quaver-sparkle",
       "hash": "333fe104f59f62a72af0d8b5c0777de42c43d50fd2d09b771a5ae21bc68a6bcc"
+    },
+    {
+      "id": "quaver-original-imprint",
+      "name": "原印象",
+      "version": "0.1.68",
+      "minHostVersion": "1.7.0",
+      "description": "原印象，复刻熟悉的企鹅音乐外观。",
+      "category": "theme",
+      "download": "https://quaver.0w0.red/sparkle/plugins/quaver-original-imprint.js",
+      "hash": "c842f15746961d348f823dcc33fe6b7dbc5db839d12cd1597bbacd7cec9d1cf0"
     }
   ]
 }
