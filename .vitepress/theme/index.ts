@@ -5,6 +5,7 @@ import WLink from './components/WLink/index.vue' // 友链页
 import Detail from './components/DetailLayout.vue' // 详情组件（<detail>）
 import DownloadPage from './components/DownloadPage.vue' // 下载页
 import ReleaseNotes from './components/ReleaseNotes.vue' // Release 正文渲染
+import HomeLanding from './components/HomeLanding.vue' // 首页 landing
 
 export default {
     ...DefaultTheme,
@@ -15,5 +16,6 @@ export default {
         app.component('detail', Detail) // 详情组件：<detail>...</detail>
         app.component('DownloadPage', DownloadPage)
         app.component('ReleaseNotes', ReleaseNotes)
+        app.component('home', HomeLanding) // 覆盖默认 home 布局
     }
 };
