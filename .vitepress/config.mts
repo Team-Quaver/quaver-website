@@ -171,7 +171,7 @@ export default defineConfig({
       { text: '文档', link: '/guide/' },
       { text: '免责协议', link: '/agreement' },
       { text: '下载', link: '/download/' },
-      { text: '友链', link: '/links.md' },
+      //{ text: '友链', link: '/links.md' },
     ],
     socialLinks: [
       { icon: 'github', link: 'https://github.com/team-quaver/quaver-music' },
