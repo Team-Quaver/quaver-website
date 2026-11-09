@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useData } from 'vitepress'
 
 const { isDark } = useData()
@@ -16,6 +16,7 @@ function collectReveals() {
 }
 
 onMounted(() => {
+  startPlayer()
   collectReveals()
   const reduceMotion =
     typeof window !== 'undefined' &&
@@ -39,6 +40,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  stopPlayer()
   revealObserver?.disconnect()
   revealObserver = null
 })
@@ -74,6 +76,96 @@ function onCardMove(index: number, event: MouseEvent) {
 function onCardLeave(index: number) {
   if (spotlight[index]) spotlight[index].on = false
 }
+
+type PlayerTrack = {
+  title: string
+  artist: string
+  cover: string
+  duration: number
+}
+
+const playerTracks: PlayerTrack[] = [
+  {
+    title: 'Fire Again 战火重燃',
+    artist: '无畏契约 / Ashnikko',
+    cover: '/imgs/fire-again.jpg',
+    duration: 168
+  },
+  {
+    title: 'Ticking Away 流光似箭',
+    artist: '无畏契约 / Grabbitz / bbno$',
+    cover: '/imgs/ticking-away.jpg',
+    duration: 225
+  },
+  {
+    title: 'SUPERPOWER',
+    artist: '无畏契约 / 쥴리 (KISS OF LIFE) / 나띠 (KISS OF LIFE) / 段宜恩',
+    cover: '/imgs/superpower.jpg',
+    duration: 172
+  }
+]
+
+const playerIndex = ref(1)
+const playerPlaying = ref(true)
+const playerElapsed = ref(0)
+const currentTrack = computed(() => playerTracks[playerIndex.value])
+const progressPercent = computed(() =>
+  Math.min(100, (playerElapsed.value / currentTrack.value.duration) * 100)
+)
+const progressLabel = computed(
+  () => `${formatTime(playerElapsed.value)} / ${formatTime(currentTrack.value.duration)}`
+)
+
+function formatTime(seconds: number) {
+  const total = Math.max(0, Math.floor(seconds))
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`
+}
+
+function stepTrack(step: number) {
+  playerIndex.value =
+    (playerIndex.value + step + playerTracks.length) % playerTracks.length
+  playerElapsed.value = 0
+}
+
+function togglePlay() {
+  playerPlaying.value = !playerPlaying.value
+}
+
+let coversPreloaded = false
+
+function preloadCovers() {
+  if (coversPreloaded) return
+  coversPreloaded = true
+  playerTracks.forEach(track => {
+    const image = new Image()
+    image.src = track.cover
+  })
+}
+
+let playerTimer: number | undefined
+let lastTick = 0
+
+function startPlayer() {
+  lastTick = performance.now()
+  playerTimer = window.setInterval(() => {
+    const now = performance.now()
+    const delta = (now - lastTick) / 1000
+    lastTick = now
+    if (!playerPlaying.value || delta > 1.5) return
+    playerElapsed.value += delta
+    if (playerElapsed.value >= currentTrack.value.duration) {
+      playerElapsed.value = 0
+      playerIndex.value = (playerIndex.value + 1) % playerTracks.length
+    }
+  }, 250)
+}
+
+function stopPlayer() {
+  if (playerTimer !== undefined) {
+    window.clearInterval(playerTimer)
+    playerTimer = undefined
+  }
+}
 </script>
 
 <template>
@@ -94,7 +186,7 @@ function onCardLeave(index: number) {
             现代、流畅、<span class="q-grad">百变</span>
           </h1>
           <p class="q-hero-lead q-reveal" style="--d: 120ms">
-            Electron + Vite 前端，Golang 播放后端，Sparkle 插件系统。
+            Electron + Vite 前端 // MyGO 原生版，Go 播放后端，花火插件系统。
             听歌体验，从这开始。
           </p>
           <ul class="q-hero-chips q-reveal" style="--d: 180ms" aria-label="支持平台">
@@ -126,6 +218,11 @@ function onCardLeave(index: number) {
           <span class="q-hero-halo" aria-hidden="true" />
           <div
             class="q-mock"
+            :class="{ 'is-paused': !playerPlaying }"
+            role="group"
+            aria-label="Quaver Music 播放器预览"
+            @pointerenter="preloadCovers"
+            @focusin="preloadCovers"
             :style="{
               '--rx': `${heroTilt.rx}deg`,
               '--ry': `${heroTilt.ry}deg`,
@@ -141,29 +238,76 @@ function onCardLeave(index: number) {
               <span class="q-mock-pill">SQ · 无损</span>
             </div>
             <div class="q-mock-body">
-              <div class="q-mock-cover" aria-hidden="true">
-                <img
-                  src="/imgs/ticking-away.jpg"
-                  alt=""
-                  width="540"
-                  height="540"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <span class="q-mock-cover-glow" />
+              <div class="q-mock-cover">
+                <Transition name="q-cover">
+                  <img
+                    :key="currentTrack.cover"
+                    :src="currentTrack.cover"
+                    :alt="`${currentTrack.title} 封面`"
+                    width="540"
+                    height="540"
+                    decoding="async"
+                  />
+                </Transition>
+                <span class="q-mock-cover-glow" aria-hidden="true" />
               </div>
               <div class="q-mock-meta">
-                <p class="q-mock-eyebrow">NOW PLAYING</p>
-                <p class="q-mock-song">Ticking Away 流光似箭</p>
-                <p class="q-mock-artist">无畏契约 / Grabbitz / bbno$</p>
-                <div class="q-mock-progress" aria-hidden="true">
-                  <span class="q-mock-progress-fill" />
+                <div aria-live="polite">
+                  <p class="q-mock-eyebrow">{{ playerPlaying ? 'NOW PLAYING' : 'PAUSED' }}</p>
+                  <p class="q-mock-song">{{ currentTrack.title }}</p>
+                  <p class="q-mock-artist" :title="currentTrack.artist">{{ currentTrack.artist }}</p>
                 </div>
-                <div class="q-mock-ctrl" aria-hidden="true">
-                  <span>‹‹</span>
-                  <span class="q-mock-play"><i /><i /></span>
-                  <span>››</span>
-                  <span class="q-mock-time">1:32 / 3:45</span>
+                <div
+                  class="q-mock-progress"
+                  role="progressbar"
+                  :aria-label="`${currentTrack.title} 播放进度`"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  :aria-valuenow="Math.round(progressPercent)"
+                >
+                  <span
+                    class="q-mock-progress-fill"
+                    :style="{ width: `${progressPercent}%` }"
+                  />
+                </div>
+                <div class="q-mock-ctrl">
+                  <button
+                    class="q-mock-btn"
+                    type="button"
+                    aria-label="上一首"
+                    title="上一首"
+                    @click="stepTrack(-1)"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M6 5h2.2v14H6zM19.5 5.6v12.8L9 12z" />
+                    </svg>
+                  </button>
+                  <button
+                    class="q-mock-play"
+                    type="button"
+                    :aria-label="playerPlaying ? '暂停' : '播放'"
+                    :title="playerPlaying ? '暂停' : '播放'"
+                    @click="togglePlay"
+                  >
+                    <svg v-if="playerPlaying" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z" />
+                    </svg>
+                    <svg v-else viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M8 5.3v13.4L19.5 12z" />
+                    </svg>
+                  </button>
+                  <button
+                    class="q-mock-btn"
+                    type="button"
+                    aria-label="下一首"
+                    title="下一首"
+                    @click="stepTrack(1)"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M15.8 5H18v14h-2.2zM4.5 5.6v12.8L15 12z" />
+                    </svg>
+                  </button>
+                  <span class="q-mock-time">{{ progressLabel }}</span>
                 </div>
               </div>
               <div class="q-mock-eq" aria-hidden="true">
@@ -293,7 +437,7 @@ function onCardLeave(index: number) {
             <i v-for="n in 32" :key="n" :style="{ '--i': n }" />
           </div>
           <div v-else-if="card.kind === 'sparkle'" class="q-card-visual q-chips" aria-hidden="true">
-            <span>主题</span><span>插件</span><span>扩展</span><span>Marketplace</span>
+            <span>主题</span><span>插件</span><span>Marketplace</span>
           </div>
           <div v-else-if="card.kind === 'tint'" class="q-card-visual q-swatches" aria-hidden="true">
             <span style="--c: #b79cff" /><span style="--c: #ff9ec7" /><span style="--c: #7ee0d0" />
@@ -330,7 +474,7 @@ function onCardLeave(index: number) {
           <div class="q-sparkle-head">
             <span class="q-sparkle-title">设置 · Sparkle</span>
             <span class="q-sparkle-tabs">
-              <em class="on">插件</em><em>主题</em><em>扩展</em><em>Marketplace</em>
+              <em class="on">插件</em><em>主题</em><em>Marketplace</em>
             </span>
           </div>
           <ul class="q-sparkle-list">
@@ -354,8 +498,7 @@ function onCardLeave(index: number) {
         <p class="q-section-eyebrow">ASTRA</p>
         <h2 class="q-section-title">一个更轻的<br />Quaver</h2>
         <p class="q-section-lead">
-          基于 Golang + MyGO Native，没有 WebView，和完整版共用 Typhoeus-Go 后端，
-          把在线播放做到极致轻量。
+          基于 Golang + MyGO Native，没有 WebView，和完整版共用 Typhoeus-Go 后端，把在线播放做到极致轻量。
         </p>
       </div>
       <div class="q-astra-diagram q-reveal" style="--d: 120ms">
@@ -375,7 +518,7 @@ function onCardLeave(index: number) {
             <text x="0" y="34" class="q-layer-tag">UI 层</text>
             <g class="q-node q-node-top">
               <rect x="230" y="14" width="260" height="60" rx="14" />
-              <text x="360" y="40" text-anchor="middle">Quaver Music Astra</text>
+              <text x="360" y="40" text-anchor="middle">Quaver Astra</text>
               <text x="360" y="58" text-anchor="middle" class="q-node-sub">MyGO 原生界面</text>
             </g>
           </g>
@@ -481,7 +624,7 @@ export default {
         {
           icon: '🌳',
           title: '百变，由你设计',
-          desc: '基于 Sparkle 插件系统，主题 / 插件 / 扩展 / Marketplace 四个相互隔离的标签。',
+          desc: '基于花火插件系统，可打造属于你的 Quaver Music。',
           kind: 'sparkle',
           wide: false
         },
@@ -509,7 +652,7 @@ export default {
         {
           icon: '💬',
           title: '社区为本',
-          desc: '飞书问卷调研真实使用场景，LLM 贡献代码由人工审核，持续维护。',
+          desc: '飞书问卷调研真实使用场景，支持 LLM 贡献代码（推荐人先审核一遍），尽力持续维护。',
           kind: 'community',
           wide: true
         }
@@ -682,6 +825,7 @@ export default {
     transition: none;
   }
   .q-mock-eq i,
+  .q-mock-cover-glow,
   .q-eq i,
   .q-marquee-track,
   .q-shot,
@@ -693,17 +837,22 @@ export default {
   .q-btn-arrow {
     animation: none !important;
   }
+  .q-cover-enter-active,
+  .q-cover-leave-active,
+  .q-mock-progress-fill {
+    transition: none;
+  }
 }
 
 /* ===== hero ===== */
 .q-hero {
   position: relative;
   padding: clamp(96px, 14vh, 150px) 24px 64px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .q-hero-bg {
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
@@ -955,10 +1104,27 @@ export default {
 }
 
 .q-mock-cover img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.q-cover-enter-active,
+.q-cover-leave-active {
+  transition: opacity 0.32s ease, transform 0.45s var(--q-ease);
+}
+
+.q-cover-enter-from {
+  opacity: 0;
+  transform: scale(1.06);
+}
+
+.q-cover-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
 }
 
 .q-mock-cover-glow {
@@ -967,6 +1133,7 @@ export default {
   background: conic-gradient(from 0deg, transparent 0 70%, color-mix(in srgb, #fff 60%, transparent) 85%, transparent 100%);
   animation: q-spin 6s linear infinite;
   opacity: 0.35;
+  pointer-events: none;
 }
 
 .q-mock-meta {
@@ -1011,7 +1178,7 @@ export default {
   width: 42%;
   border-radius: inherit;
   background: var(--q-grad);
-  animation: q-progress 9s linear infinite;
+  transition: width 0.25s linear;
 }
 
 .q-mock-ctrl {
@@ -1023,24 +1190,67 @@ export default {
   color: var(--vp-c-text-2);
 }
 
+.q-mock-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--vp-c-text-2);
+  cursor: pointer;
+  transition: color 0.25s ease, background-color 0.25s ease, transform 0.25s var(--q-ease);
+}
+
+.q-mock-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
+.q-mock-btn:hover {
+  color: var(--main-color);
+  background: color-mix(in srgb, var(--main-color) 12%, transparent);
+}
+
+.q-mock-btn:active {
+  transform: scale(0.92);
+}
+
 .q-mock-play {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
   width: 36px;
   height: 36px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
   background: var(--main-color);
   color: #fff;
+  cursor: pointer;
   box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--main-color) 80%, transparent);
+  transition: transform 0.25s var(--q-ease), box-shadow 0.25s ease;
 }
 
-.q-mock-play i {
-  width: 3px;
-  height: 12px;
-  border-radius: 1px;
-  background: currentColor;
+.q-mock-play svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
+}
+
+.q-mock-play:hover {
+  transform: scale(1.07);
+  box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--main-color) 90%, transparent);
+}
+
+.q-mock-btn:focus-visible,
+.q-mock-play:focus-visible {
+  outline: 2px solid var(--main-color);
+  outline-offset: 2px;
 }
 
 .q-mock-time {
@@ -1071,6 +1281,11 @@ export default {
   animation: q-bar 1.6s ease-in-out infinite;
   animation-delay: calc(var(--i) * -0.12s);
   opacity: 0.75;
+}
+
+.q-mock.is-paused .q-mock-eq i,
+.q-mock.is-paused .q-mock-cover-glow {
+  animation-play-state: paused;
 }
 
 @keyframes q-bar {
@@ -1810,11 +2025,6 @@ export default {
 @keyframes q-grad-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
-}
-
-@keyframes q-progress {
-  0% { width: 8%; }
-  100% { width: 96%; }
 }
 
 @keyframes q-marquee {
