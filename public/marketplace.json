@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-08T12:02:17.560Z",
+  "updated": "2026-11-09T06:52:55.886Z",
   "plugins": [
     {
       "id": "aurora",
@@ -51,13 +51,13 @@
     },
     {
       "id": "quaver-original-imprint",
-      "name": "原印象",
-      "version": "0.1.68",
+      "name": "Original Imprint 原印象",
+      "version": "0.1.81",
       "minHostVersion": "1.7.0",
       "description": "原印象，复刻熟悉的企鹅音乐外观。",
       "category": "theme",
       "download": "https://quaver.0w0.red/sparkle/plugins/quaver-original-imprint.js",
-      "hash": "c842f15746961d348f823dcc33fe6b7dbc5db839d12cd1597bbacd7cec9d1cf0"
+      "hash": "1881d1b0d8c60f6606d1ee042ee0f5e3d9dad33650c727f19d011d56dc8caea6"
     }
   ]
 }
