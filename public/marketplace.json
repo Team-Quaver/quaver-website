@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-09T06:52:55.886Z",
+  "updated": "2026-11-10T13:40:16.690Z",
   "plugins": [
     {
       "id": "aurora",
@@ -25,6 +25,19 @@
       "download": "https://quaver.0w0.red/sparkle/plugins/flowscape.js",
       "homepage": "https://github.com/Team-Quaver/quaver-sparkle",
       "hash": "c74aade8aacb1d80c47c00937633c42e927832710e92a72455e3bd5c8095d055"
+    },
+    {
+      "id": "folia-visualizer",
+      "name": "Folia 辞境",
+      "version": "1.0.8",
+      "minHostVersion": "1.8.0",
+      "allowBeta": true,
+      "author": "Team Quaver",
+      "description": "Folia 播放器的 Quaver Music 移植版本。（Folia by chthollyphile，使用 AGPLv3 协议开源）",
+      "category": "plugin",
+      "download": "https://quaver.0w0.red/sparkle/plugins/folia-visualizer.js",
+      "homepage": "https://github.com/chthollyphile/folia-major",
+      "hash": "1b3d5deeaa1fba0de2c1605418337ec934a21118aa1584acae5f778173fdfcc2"
     },
     {
       "id": "md3",
