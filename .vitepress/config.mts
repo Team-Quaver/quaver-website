@@ -174,7 +174,7 @@ export default defineConfig({
       //{ text: '友链', link: '/links.md' },
     ],
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/team-quaver/quaver-music' },
+      { icon: 'github', link: 'https://github.com/team-quaver/' },
     ],
     sidebar: [
       {
