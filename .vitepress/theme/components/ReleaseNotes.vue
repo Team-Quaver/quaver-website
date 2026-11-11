@@ -9,6 +9,19 @@
 
       <p v-else-if="block.type === 'paragraph'" v-html="renderInline(block.text)" />
 
+      <figure v-else-if="block.type === 'image'" class="release-image">
+        <a :href="block.src" target="_blank" rel="noopener noreferrer">
+          <img
+            :src="block.src"
+            :alt="block.alt"
+            loading="lazy"
+            decoding="async"
+            referrerpolicy="no-referrer"
+          />
+        </a>
+        <figcaption v-if="block.title">{{ block.title }}</figcaption>
+      </figure>
+
       <blockquote v-else-if="block.type === 'quote'" v-html="renderInline(block.text)" />
 
       <pre v-else-if="block.type === 'code'"><code>{{ block.text }}</code></pre>
@@ -33,12 +46,13 @@ import { computed } from 'vue'
 /**
  * GitHub Release 正文是运行时字符串，不能走 VitePress 的构建期 Markdown 渲染。
  * 这里只实现发行说明常用的块级语法；行内语法统一先转义再拼接安全标签，
- * 因而不接受原始 HTML，也不会把远端内容当成可执行标记。
+ * 因而不会执行远端 HTML；仅保留 <img>，且图片地址只接受 http(s)。
  */
 
 type Block =
   | { type: 'heading'; level: number; text: string }
   | { type: 'paragraph'; text: string }
+  | { type: 'image'; src: string; alt: string; title: string }
   | { type: 'quote'; text: string }
   | { type: 'list'; ordered: boolean; items: string[] }
   | { type: 'code'; text: string }
@@ -61,6 +75,14 @@ function normalizeBody(body: string): string {
     .replace(/\r\n?/g, '\n')
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/<br\s*\/?>/gi, '\n')
+    // GitHub 的 release note 常用 <img>，必须在剥标签前保留下来
+    .replace(/<img\b[^>]*>/gi, tag => {
+      const src = decodeEntities(readAttribute(tag, 'src'))
+      if (!src) return ''
+      const alt = decodeEntities(readAttribute(tag, 'alt'))
+      const title = decodeEntities(readAttribute(tag, 'title'))
+      return `\n\n${imageMarkdown(alt, src, title)}\n\n`
+    })
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
@@ -68,12 +90,32 @@ function normalizeBody(body: string): string {
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    // 发行说明里的封面图通常很大，折叠区里只保留一个轻量链接
-    .replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (_match, alt, url) => {
-      const label = alt ? `查看图片：${alt}` : '查看图片'
-      return `[${label}](${url})`
-    })
     .trim()
+}
+
+function readAttribute(tag: string, name: string): string {
+  const pattern = new RegExp(
+    `(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`,
+    'i'
+  )
+  const match = tag.match(pattern)
+  return match?.[1] ?? match?.[2] ?? match?.[3] ?? ''
+}
+
+function decodeEntities(value: string): string {
+  return value
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+}
+
+function imageMarkdown(alt: string, src: string, title: string): string {
+  const safeAlt = alt.replace(/[[\]]/g, '')
+  const safeTitle = title ? ` "${title.replace(/"/g, '')}"` : ''
+  return `![${safeAlt}](${src}${safeTitle})`
 }
 
 function parseBlocks(markdown: string): Block[] {
@@ -98,6 +140,13 @@ function parseBlocks(markdown: string): Block[] {
         index += 1
       }
       result.push({ type: 'code', text: code.join('\n') })
+      index += 1
+      continue
+    }
+
+    const image = parseStandaloneImage(trimmed)
+    if (image) {
+      result.push({ type: 'image', ...image })
       index += 1
       continue
     }
@@ -166,6 +215,14 @@ function parseBlocks(markdown: string): Block[] {
   return result
 }
 
+function parseStandaloneImage(line: string): { src: string; alt: string; title: string } | null {
+  const match = line.match(/^!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)$/)
+  if (!match) return null
+  const src = safeImageSrc(match[2])
+  if (!src) return null
+  return { src, alt: match[1], title: match[3] || '' }
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -185,13 +242,20 @@ function safeHref(raw: string): string | null {
   return null
 }
 
+function safeImageSrc(raw: string): string | null {
+  const value = raw.trim()
+  if (/^https?:\/\//i.test(value)) return value
+  if (/^\/\//.test(value)) return `https:${value}`
+  return null
+}
+
 /**
  * 输出已经过 HTML 转义的行内 Markdown。所有属性值都来自转义后的文本，
- * 且链接协议被限制为 http(s)，可以安全交给 v-html。
+ * 且链接 / 图片协议被限制为 http(s)，可以安全交给 v-html。
  */
 function renderInline(source: string): string {
   const pattern =
-    /(\*\*([^*]+)\*\*)|(`([^`]+)`)|(\[([^\]]+)\]\(([^)\s]+)\))|(https?:\/\/[^\s<)]+)/g
+    /!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)|(\*\*([^*]+)\*\*)|(`([^`]+)`)|(\[([^\]]+)\]\(([^)\s]+)\))|(https?:\/\/[^\s<)]+)/g
 
   let output = ''
   let lastIndex = 0
@@ -200,17 +264,25 @@ function renderInline(source: string): string {
   while ((match = pattern.exec(source)) !== null) {
     output += escapeHtml(source.slice(lastIndex, match.index))
 
-    if (match[2]) {
-      output += `<strong>${escapeHtml(match[2])}</strong>`
-    } else if (match[4]) {
-      output += `<code>${escapeHtml(match[4])}</code>`
-    } else if (match[6] && match[7]) {
-      const href = safeHref(match[7])
+    if (match[1] !== undefined) {
+      const src = safeImageSrc(match[2])
+      if (src) {
+        const title = match[3] ? ` title="${escapeHtml(match[3])}"` : ''
+        output += `<a class="release-image-link" href="${escapeHtml(src)}" target="_blank" rel="noopener noreferrer"><img src="${escapeHtml(src)}" alt="${escapeHtml(match[1])}"${title} loading="lazy" decoding="async" referrerpolicy="no-referrer" /></a>`
+      } else {
+        output += escapeHtml(match[0])
+      }
+    } else if (match[5]) {
+      output += `<strong>${escapeHtml(match[5])}</strong>`
+    } else if (match[7]) {
+      output += `<code>${escapeHtml(match[7])}</code>`
+    } else if (match[9] && match[10]) {
+      const href = safeHref(match[10])
       output += href
-        ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(match[6])}</a>`
-        : escapeHtml(match[6])
-    } else if (match[8]) {
-      output += `<a href="${escapeHtml(match[8])}" target="_blank" rel="noopener noreferrer">${escapeHtml(match[8])}</a>`
+        ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(match[9])}</a>`
+        : escapeHtml(match[9])
+    } else if (match[11]) {
+      output += `<a href="${escapeHtml(match[11])}" target="_blank" rel="noopener noreferrer">${escapeHtml(match[11])}</a>`
     }
 
     lastIndex = pattern.lastIndex
@@ -223,7 +295,7 @@ function renderInline(source: string): string {
 
 <style scoped>
 .release-notes-body {
-  max-height: 320px;
+  max-height: min(70vh, 640px);
   overflow-y: auto;
   padding: 4px 20px 18px;
   color: var(--vp-c-text-1);
@@ -267,6 +339,44 @@ function renderInline(source: string): string {
 
 .release-notes-body :deep(a:hover) {
   text-decoration: underline;
+}
+
+.release-image {
+  margin: 14px 0;
+  text-align: center;
+}
+
+.release-image a {
+  display: block;
+}
+
+.release-image img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  margin: 0 auto;
+  border: 1px solid color-mix(in srgb, var(--main-color) 16%, var(--vp-c-divider));
+  border-radius: 12px;
+  background: var(--vp-c-bg-soft);
+  object-fit: contain;
+}
+
+.release-image figcaption {
+  margin-top: 6px;
+  color: var(--vp-c-text-3);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.release-notes-body :deep(img) {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  margin: 12px auto;
+  border: 1px solid color-mix(in srgb, var(--main-color) 16%, var(--vp-c-divider));
+  border-radius: 12px;
+  background: var(--vp-c-bg-soft);
+  object-fit: contain;
 }
 
 .release-notes-body :deep(code) {
