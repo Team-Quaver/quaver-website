@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-10T13:40:16.690Z",
+  "updated": "2026-11-14T06:32:03.728Z",
   "plugins": [
     {
       "id": "aurora",
@@ -29,7 +29,7 @@
     {
       "id": "folia-visualizer",
       "name": "Folia 辞境",
-      "version": "1.0.8",
+      "version": "1.0.9",
       "minHostVersion": "1.8.0",
       "allowBeta": true,
       "author": "Team Quaver",
@@ -37,7 +37,7 @@
       "category": "plugin",
       "download": "https://quaver.0w0.red/sparkle/plugins/folia-visualizer.js",
       "homepage": "https://github.com/chthollyphile/folia-major",
-      "hash": "1b3d5deeaa1fba0de2c1605418337ec934a21118aa1584acae5f778173fdfcc2"
+      "hash": "9c96605f0a5767ec2fc1226410a4d367a1aaca668794862ef15fb6f8ac800903"
     },
     {
       "id": "md3",
